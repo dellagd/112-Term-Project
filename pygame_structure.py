@@ -92,7 +92,7 @@ class PygameMode():
         background.fill(self.bkcolor)
         self.surfaces.append(background)
        
-    def drawView(self, screen):
+    def drawView(self, screen):        
         for surface in self.surfaces:
             #print("Mode: %s Surface: %s" % (self.currentMode, surfaceKey))
             if (isinstance(surface, pygame.Surface)):
@@ -129,8 +129,39 @@ class PygameMode():
     def getSurface(self, i):
         return self.surfaces[i]
 
+class PygameObject(object):
+    def __init__(self, pos=(0,0), mToV=lambda x:x, vToM=lambda x:x):
+        self.mToV = mToV
+        self.vToM = vToM
+        self.objects = []
+        self.pos = pos
+        self.initData()
+        pass
+
+    def initData(self):
+        pass
+
+    '''Override'''
+    def draw(self, surface, dims, offset=(0,0)):
+        for obj in self.objects:
+            obj.draw(surface, dims, offset)
+    
+    '''Override'''
+    def mousePressed(self, surface, x, y):
+        for obj in self.objects:
+            obj.mousePressed(surface, x, y)
+
 class SurfacePlus(object):
     def __init__(self):
         self.surf = None
-        self.offset = [0,0]
         self.name = ""
+        self.objects = []
+
+    def drawObjects(self, offset=(0,0)):
+        for obj in self.objects:
+            obj.draw(self, self.surf.get_size(), offset)
+
+    def mouseObjects(self, event, offset):
+        for obj in self.objects:
+            obj.mousePressed(self, event.pos[0],
+                    event.pos[1])

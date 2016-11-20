@@ -6,15 +6,15 @@ class ProbabilisticMap(object):
         self.scanner = apScanner
         
         self.mapTable = mapTable
-        #self.mapTable.nukeTable()
+        self.mapTable.nukeTable()
 
         self.addingToMap = False
         self.pdfsPerLocation = None
 
         self.regenerateModel()
 
-    def addResultRow(self,loc, bssid, rssi):
-        self.mapTable.addAP(loc, bssid, rssi)
+    def addResultRow(self, loc, bssid, rssi, timeStamp):
+        self.mapTable.addAP(loc, bssid, rssi, timeStamp)
 
     def regenerateModel(self):
         # Generate histogram for each ap at each location

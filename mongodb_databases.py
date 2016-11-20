@@ -26,13 +26,14 @@ class MapTable(MDBTable):
     def __init__(self, db):
         super().__init__("APMap", db)
 
-    def addAP(self, loc, bssid, rssi):
-        toDict = {"Location" : loc, "BSSID" : bssid, "RSSI" : str(rssi)}
+    def addAP(self, loc, bssid, rssi, tS):
+        toDict = {"Location" : loc, "BSSID" : bssid,
+                "RSSI" : str(rssi), "TIME" : tS}
         self.insertRow(toDict)
 
     def getAPsAtLoc(self, loc):
         res = list(self.findRowsWhere({"Location" : loc},
-                fields=['Location', 'BSSID', 'RSSI']))
+                fields=['Location', 'BSSID', 'RSSI', 'TIME']))
         
         for x in res:
             x.pop("_id")
@@ -41,7 +42,7 @@ class MapTable(MDBTable):
 
     def getAPsAtLocWithBSSID(self, loc, bssid):
         res = list(self.findRowsWhere({"Location" : loc, "BSSID" : bssid},
-                fields=['Location', 'BSSID', 'RSSI']))
+                fields=['Location', 'BSSID', 'RSSI', 'TIME']))
         
         for x in res:
             x.pop("_id")
