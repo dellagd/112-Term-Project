@@ -10,7 +10,7 @@ class APScanner(threading.Thread):
         self.foundAPs = []
         self.mapAPs = []
         self.loopPrint = lp
-        self.trigFunc = trigFunc
+        self.trigFuncs = [trigFunc]
         self.__populateMap()
     
     def run(self):
@@ -72,7 +72,7 @@ class APScanner(threading.Thread):
     def getResultsList(self):
         resl = []
         for ap in self.foundAPs:
-            if ap.rssi < -70: continue
+            if ap.rssi < -60: continue
             resl.append(
                     {"AGE":str(ap.age),
                     "SSID":ap.ssid,
@@ -120,7 +120,9 @@ class APScanner(threading.Thread):
                 #        ap.ageTick()
 
                 self.__sortAPList()    
-                if (self.trigFunc != None): self.trigFunc(self.getResultsList())
+                if (self.trigFuncs != None): 
+                    for f in self.trigFuncs:
+                        f(self.getResultsList())
             else:
                 # Error in scan
                 pass

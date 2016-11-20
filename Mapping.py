@@ -12,6 +12,7 @@ class MappingUtility(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.myPygame = MainPygame()
+        #self.myPygame.daemon=True
         self.myPygame.start()
 
     def run(self):

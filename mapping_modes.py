@@ -1,7 +1,8 @@
 from pygame_structure import *
 from functools import reduce
 from collections import Counter
-import ScannerUtils
+import mongodb_databases
+import ScannerUtils, StatModelForAPs
 from ast import literal_eval
 
 class TestMode(PygameMode):
@@ -21,29 +22,58 @@ class TestMode(PygameMode):
         self.possiblePos = []
         self.currentPos = None
 
-        self.apList = []
+        self.mapByLoc = {}
+        self.db = mongodb_databases.MDBDatabase("MapCMU")
+        self.mapTable = mongodb_databases.MapTable(self.db.database)
+
         self.scanner = ScannerUtils.APScanner(trigFunc=self.scanResult)
+        self.scanner.daemon=True
         self.scanner.start()
+        
+        self.statmodel = StatModelForAPs.ProbabilisticMap(
+                self.scanner, self.mapTable)
 
     def scanResult(self, result):
         if self.recording:
             self.resultTick += 1
-            toAdd = {}
-            toAdd["APs"] = result
-            toAdd["FOUNDLOC"] = "(%d,%d)"%(self.map2.offset[1],self.map2.offset[0])
-            self.apList.append(toAdd)
-            #print("Added: %r"%toAdd)
+            for apRow in result:
+                apRow["Location"] = "(%d,%d)"%(self.map2.offset[1],self.map2.offset[0]) 
+                self.statmodel.addResultRow(
+                        apRow["Location"], apRow["BSSID"], apRow["RSSI"])
+           
+            self.statmodel.regenerateModel()    
         elif self.finding:
             self.resultTick += 1
-            self.possiblePos.append(self.findBestMatch(result))
-            self.currentPos = self.reducePositions(self.possiblePos)
-    
+            self.currentPos = self.statmodel.findLocation(result)
+
     def reducePositions(self, posits):
+        # Reduce the list of position results to make a good guess of location
+        # Currently just finding mode value
         n = len(posits)
-        #sumTup = reduce(lambda x,y: (x[0]+y[0], x[1]+y[1]), posits, (0,0))
-        #return tuple(map(lambda x: x/n, sumTup))
         intList = list(map(lambda x: (int(x[0]),int(x[1])), posits))
         return Counter(intList).most_common(1)[0][0]
+
+    def generateMapAverages(self):
+        possibleLocs = self.mapTable.collection.distinct("Location")
+        self.mapByLoc = {}
+
+        for loc in possibleLocs:
+            self.mapByLoc[loc] = []
+
+            apsAtLoc = self.mapTable.getAPsAtLoc(loc)
+            possibleBSSIDs = self.mapTable.collection.distinct("BSSID" , {"Location" : loc})
+            #print("%d possible BSSIDs at %s" % (len(possibleBSSIDs),loc))
+
+            for bssid in possibleBSSIDs:
+                samples = self.mapTable.getAPsAtLocWithBSSID(loc, bssid)
+                #print(list(samples))
+
+                amount = len(list(samples))
+                sumOfRSSI = reduce(lambda x,y: x+int(y["RSSI"]), samples, 0)
+                
+                avg = sumOfRSSI / amount
+
+                self.mapByLoc[loc].append({"BSSID" : bssid, "RSSI" : avg})
 
     def findBestMatch(self, result):
         def findBSSIDMatch(bssid, a):
@@ -58,40 +88,14 @@ class TestMode(PygameMode):
         def dbOffset(db):
             return db + 90
 
-        byLoc = {}
-        for val in self.apList:
-            loc = val["FOUNDLOC"]
-            if loc in byLoc:
-                byLoc[loc] = byLoc[loc] + tuple([ap for ap in val["APs"]])
-            else:
-                byLoc[loc] = tuple([ap for ap in val["APs"]])
-
-        avgByLoc = {}
-        for loc in byLoc:
-            bssids = set([ap['BSSID'] for ap in byLoc[loc]])
-
-            for bssid in bssids:
-                apsWithBssid = list(filter(lambda x: x["BSSID"] == bssid, byLoc[loc]))
-                apNum = len(apsWithBssid)
-                if apNum < 1: continue
-                
-                averageRssi = reduce(lambda x,y: x + int(y["RSSI"]), apsWithBssid, 0)
-                averageRssi /= apNum
-
-                if loc in avgByLoc:
-                    avgByLoc[loc] = avgByLoc[loc] + ({"BSSID":bssid, "RSSI":averageRssi},)
-                else:
-                    avgByLoc[loc] = ({"BSSID":bssid, "RSSI":averageRssi},)
-                    
-
         bestScore = 100000000000
-        bestLoc = self.apList[0]["FOUNDLOC"] 
-        for loc in avgByLoc:
-            apsAtLoc = avgByLoc[loc]
+        bestLoc = None
+        for loc in self.mapByLoc:
+            apsAtLoc = self.mapByLoc[loc]
             score = 0
             apsHit = []
             bothLists = reduce(lambda x,y: x + 
-                    ((y,) if findBSSIDMatch(y["BSSID"], apsAtLoc) == None else tuple()),
+                    ([y] if findBSSIDMatch(y["BSSID"], apsAtLoc) == None else list()),
                     result,
                     apsAtLoc)
 
@@ -120,14 +124,6 @@ class TestMode(PygameMode):
                 print("RSSI1: %d RSSI2: %d"%(mRScore,mLScore))
                 score += abs(mRScore - mLScore)
                 
-                #if (match != None):
-                #    print("RSSI1: %s RSSI2: %s"%(match["RSSI"],ap["RSSI"]))
-                #    score += (dbToScore(int(match["RSSI"])) - 
-                #              dbToScore(int(ap["RSSI"])))**2
-                #else:
-                #    print("RSSI1: %s RSSI2: %s"%(-70,ap["RSSI"]))
-                #    score += (dbToScore(-70) - dbToScore(int(ap["RSSI"])))**2 
-                #    # What to make this...
             print("Score at %s: %s" % (loc,score))
             if score < bestScore:
                 bestScore = score
@@ -135,7 +131,9 @@ class TestMode(PygameMode):
 
         return literal_eval(bestLoc)
 
+#######################################
 
+    #def drawMap
 
     def drawView(self, screen):
         self.map2.surf.fill((255,255,255))
@@ -163,6 +161,8 @@ class TestMode(PygameMode):
 
 
         super().drawView(screen)
+
+#######################################
 
     def keyPressed(self, event):
         mult = .1 if pygame.key.get_mods() & pygame.KMOD_SHIFT else 1
