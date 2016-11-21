@@ -21,7 +21,7 @@ class MappingUtility(threading.Thread):
     def __mainloop(self):
         modeA = PygameMode(fps=30)
         modeB = PygameMode(screenDims=(800,800), fps=60, bkcolor=(255,0,0))
-        modeC = TestMode()
+        modeC = MappingMode()
         self.myPygame.addMode(modeA, "A")
         self.myPygame.addMode(modeB, "B")
         self.myPygame.addMode(modeC, "C")

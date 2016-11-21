@@ -6,7 +6,7 @@ class ProbabilisticMap(object):
         self.scanner = apScanner
         
         self.mapTable = mapTable
-        self.mapTable.nukeTable()
+        #self.mapTable.nukeTable()
 
         self.addingToMap = False
         self.pdfsPerLocation = None
@@ -35,11 +35,11 @@ class ProbabilisticMap(object):
         possibleLocs = self.mapTable.collection.distinct("Location")
         bestLoc, bestProb = None, -1
         for loc in possibleLocs:
-            print("Trying loc: %r" % loc)
+            #print("Trying loc: %r" % loc)
             res = self.probOfResult(loc, topQ) * 10**8 # Better visibility
 
             if res > bestProb:
-                print("%f better than %f" % (res,bestProb))
+                #print("%f better than %f" % (res,bestProb))
                 bestLoc = loc
                 bestProb = res
 
@@ -68,10 +68,10 @@ class ProbabilisticMap(object):
             match = findBSSIDMatch(ap["BSSID"], pdfsHere)
             if match != None:
                 probFromPDF = match["PDF"](int(ap["RSSI"]))
-                print("Found Prob: %f" % probFromPDF)
+                #print("Found Prob: %f" % probFromPDF)
                 totalProb *= probFromPDF
             else:
-                print("None found: 0.0001")
+                #print("None found: 0.0001")
                 totalProb *= 0.0001
         
         return totalProb
@@ -113,7 +113,7 @@ class ProbabilisticMap(object):
             mapByLoc[loc] = topK[:]
 
             for i in range(len(mapByLoc[loc])):
-                print("Making function centered at %r" % mapByLoc[loc][i]["RSSI"])
+                #print("Making function centered at %r" % mapByLoc[loc][i]["RSSI"])
                 mapByLoc[loc][i]["PDF"] = getGaussianFunc(
                         mapByLoc[loc][i]["RSSI"],
                         exampleStdev)
