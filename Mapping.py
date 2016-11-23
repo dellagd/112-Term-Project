@@ -19,17 +19,10 @@ class MappingUtility(threading.Thread):
         self.__mainloop()
 
     def __mainloop(self):
-        modeA = PygameMode(fps=30)
-        modeB = PygameMode(screenDims=(800,800), fps=60, bkcolor=(255,0,0))
-        modeC = MappingMode()
-        self.myPygame.addMode(modeA, "A")
-        self.myPygame.addMode(modeB, "B")
-        self.myPygame.addMode(modeC, "C")
+        modeMapping = MappingMode()
+        self.myPygame.addMode(modeMapping, "Mapping")
 
-        modeB.addSurface(pygame.Surface(modeB.screenDims))
-        pygame.draw.rect(modeB.getSurface(1), (0,255,0), (0,0,20,20))
-
-        self.myPygame.useMode("C")
+        self.myPygame.useMode("Mapping")
 
 mu = MappingUtility()
 mu.run()
