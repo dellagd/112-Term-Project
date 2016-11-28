@@ -49,3 +49,11 @@ class MapTable(MDBTable):
 
         return res
 
+class SegmentTable(MDBTable):
+    def __init__(self, db):
+        super().__init__("NodeMap", db)
+
+    def addSegment(self, locA, locB, notes=""):
+        toDict = {"LOC_A" : locA, "LOC_B" : locB, "NOTE" : notes}
+        self.insertRow(toDict)
+
