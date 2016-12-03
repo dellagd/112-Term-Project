@@ -1,5 +1,6 @@
 from pygame_structure import *
 import routing_engine
+import user_input
 from mapcmu_data import *
 import math
 
@@ -7,16 +8,19 @@ class RoutePlanningMode(PygameMode):
     def __init__(self):
         PygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800))
         self.router = routing_engine.RoutingEngine()
-        self.router.testTable() # Temp for testing!
+        #self.router.testTable() # Temp for testing!
         self.mainSurf = SurfacePlus()
         self.mainSurf.surf = pygame.Surface(self.screenDims)
         self.surfaces.append(self.mainSurf)
+        
+        self.textBox = user_input.TextInputBox()
 
         self.arrowOffset = [2300,3200]
         self.selFloor = 2
         self.selBuilding = "GHC"
-        self.floorHeight = 600
+        self.newFloor(self.selFloor)
 
+        self.pointQueue = []
         self.lastPoint = None
 
         self.initMap()
@@ -30,12 +34,50 @@ class RoutePlanningMode(PygameMode):
                 vToM=self.viewToModel)
         self.mainSurf.objects.append(self.routeNodes)
 
+    def newFloor(self, floor):
+        self.selFloor = floor
+        self.zPos = (self.selFloor-1) * Constants.floorHeight
+
+    def removeLastAddedSegment(self):
+        if len(self.pointQueue) < 1: return False
+        else:
+            point = self.pointQueue.pop()
+            self.router.segTable.collection.remove({"_id" : point[0]})
+            self.routeNodes.removeNode(point[1])
+
+            findNode = [point[2][0],point[2][1],self.zPos,self.selBuilding]
+            q = { '$or' : [{"LOC_A" : findNode}, {"LOC_B" : findNode}]}
+            conn = self.router.segTable.collection.find(q)
+            if len(list(conn)) < 1:
+                self.routeNodes.removeNode(point[2])
+                self.lastPoint = None
+            else:
+                self.lastPoint = point[2]
+
+    def checkAndAddSegment(self, aLoc, bLoc):
+        print("This point: %r   Last point: %r" % (aLoc, bLoc))
+            
+        if aLoc != None and bLoc != None:
+            aLocDB = [aLoc[0],aLoc[1],self.zPos,self.selBuilding]
+            bLocDB = [bLoc[0],bLoc[1],self.zPos,self.selBuilding]
+
+            q = { '$or' : [
+                {"LOC_A" : aLocDB, "LOC_B" : bLocDB},
+                {"LOC_B" : aLocDB, "LOC_A" : bLocDB}
+                ]}
+            conn = self.router.segTable.collection.find(q)
+
+            if len(list(conn)) > 0: # This segment already exists
+                return
+            
+            rId = self.addSegmentToMap(aLoc, bLoc)
+            self.pointQueue.append((rId,aLoc,bLoc))
 
     def addSegmentToMap(self, pos1, pos2):
-        self.router.segTable.addSegment(
-            [pos1[0],pos1[1],self.floorHeight*self.selFloor,self.selBuilding],
-            [pos2[0],pos2[1],self.floorHeight*self.selFloor,self.selBuilding]
-            )
+        return self.router.segTable.addSegment(
+            [pos1[0],pos1[1],self.zPos,self.selBuilding],
+            [pos2[0],pos2[1],self.zPos,self.selBuilding]
+            ) # Returns entry id
     
     ##################################################
     
@@ -79,6 +121,15 @@ class RoutePlanningMode(PygameMode):
         def addNode(self, point):
             self.objects.append(RoutePlanningMode.RouteNode(
                 point, self.mToV, self.vToM))
+       
+        def removeNode(self, remNode):
+            for node in self.objects:
+                if node.pos == remNode:
+                    self.objects.remove(node)
+
+        def purgePoints(self):
+            # Implement if needed
+            pass
         
         def getSelectedPosition(self):
             if self.selectedPoint == None:
@@ -103,6 +154,8 @@ class RoutePlanningMode(PygameMode):
 
             self.selectedPoint = found
 
+        
+    #############################################
 
     def modelToView(self, coords, surf):
         return (coords[0] - self.arrowOffset[0] + surf.get_size()[0]//2,
@@ -131,15 +184,6 @@ class RoutePlanningMode(PygameMode):
             pygame.draw.line(self.mainSurf.surf, (0,0,255),
                     p1m, p2m)
 
-        nodes = self.router.getAllNodes()
-
-        #pointRadius = 5
-        #for node in nodes:
-        #    color = (0,0,255)
-        #    nm = self.modelToView(node, self.mainSurf.surf)
-        #    pygame.draw.circle(self.mainSurf.surf, color,
-        #            nm[:2], pointRadius)
-
     def drawCornerMsg(self):
         dfont = pygame.font.SysFont("monospace", 15)
         label = dfont.render(
@@ -156,7 +200,9 @@ class RoutePlanningMode(PygameMode):
         self.mainSurf.drawObjects(offset=tuple(self.arrowOffset))
         self.drawCornerMsg()
 
-        super().drawView(screen)  
+        #self.textBox.drawBox(self.mainSurf.surf)
+    
+        super().drawView(screen)
 
 #######################################
 
@@ -172,9 +218,7 @@ class RoutePlanningMode(PygameMode):
         else:
             self.routeNodes.addNode((xm, ym))
 
-        print("This point: %d, %d   Last point: %r" % (xm,ym,self.lastPoint)) 
-        if (xm, ym) != None and self.lastPoint != None:
-            self.addSegmentToMap((xm,ym),self.lastPoint)
+        self.checkAndAddSegment((xm,ym), self.lastPoint)
 
         self.lastPoint = (xm, ym)
 
@@ -191,6 +235,8 @@ class RoutePlanningMode(PygameMode):
             self.arrowOffset[0] -= int(100 * mult)
         elif event.key == pygame.K_RIGHT:
             self.arrowOffset[0] += int(100 * mult)
+        elif event.key == pygame.K_u:
+            self.removeLastAddedSegment()
         
         if event.key == pygame.K_SPACE:
             print("Space!")

@@ -11,3 +11,4 @@ class Constants(object):
         
     buildings = {"GHC" : Building()}
     buildings["GHC"].floors.extend(["Gates-1.jpg", "Gates-2.jpg"])
+    floorHeight = 600

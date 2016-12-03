@@ -21,6 +21,7 @@ class MDBTable(object):
 
     def insertRow(self, row):
         self.collection.insert_one(row)
+        return self.collection.find(row)[0]["_id"]
 
 class MapTable(MDBTable):
     def __init__(self, db):
@@ -55,5 +56,5 @@ class SegmentTable(MDBTable):
 
     def addSegment(self, locA, locB, notes=""):
         toDict = {"LOC_A" : locA, "LOC_B" : locB, "NOTE" : notes}
-        self.insertRow(toDict)
+        return self.insertRow(toDict)
 
