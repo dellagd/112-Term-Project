@@ -1,34 +1,23 @@
 from pygame_structure import *
+from map_pygame_structure import *
 import routing_engine
 import user_input
 from mapcmu_data import *
 import math
 
-class RoutePlanningMode(PygameMode):
+class RoutePlanningMode(MapPygameMode):
     def __init__(self):
-        PygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800))
+        MapPygameMode.__init__(self)
         self.router = routing_engine.RoutingEngine()
-        #self.router.testTable() # Temp for testing!
-        self.mainSurf = SurfacePlus()
-        self.mainSurf.surf = pygame.Surface(self.screenDims)
-        self.surfaces.append(self.mainSurf)
         
         self.textBox = user_input.TextInputBox()
-        self.arrowOffset = [2300,3200]
 
         self.initData()
-        self.initFloorData()
-        self.initMap()
         self.initRouteNodes()
         self.newFloor(self.selFloor)
 
-        self.testRoute()
+        #self.testRoute()
         
-    def initMap(self):
-        self.map2image = pygame.image.load(
-                Constants.buildings[self.selBuilding].getFloor(self.selFloor))
-        self.map2Rect = self.map2image.get_rect()
-
     def initRouteNodes(self):
         self.routeNodes = self.RouteNodeHandler(mToV=self.modelToView,
                 vToM=self.viewToModel)
@@ -39,31 +28,17 @@ class RoutePlanningMode(PygameMode):
         self.pointQueue = []
         self.lastPoint = None
 
-    def initFloorData(self):
-        self.selFloor = 2
-        self.selBuilding = "GHC"
+    def newFloor(self, floor):
+        super().newFloor(floor)
+
+        self.initData()
+        self.refreshNodes()
 
     def testRoute(self):
         nodeA = self.router.getRoomNode("Parking - 1")
         nodeB = self.router.getRoomNode("4303")
-
+        
         print("\nRoute: %r" % self.router.findRoute(nodeA,nodeB))
-
-    def upAFloor(self):
-        if self.selFloor < Constants.buildings[self.selBuilding].maxFloor:
-            self.newFloor(self.selFloor+1)
-
-    def downAFloor(self):
-        if self.selFloor > Constants.buildings[self.selBuilding].minFloor:
-            self.newFloor(self.selFloor-1)
-    
-    def newFloor(self, floor):
-        self.selFloor = floor
-        self.zPos = (self.selFloor-1) * Constants.floorHeight
-
-        self.initData()
-        self.initMap()
-        self.refreshNodes()
 
     def removeLastAddedSegment(self):
         if len(self.pointQueue) < 1: return False
@@ -200,21 +175,6 @@ class RoutePlanningMode(PygameMode):
 
     #############################################
 
-    def modelToView(self, coords, surf):
-        return (coords[0] - self.arrowOffset[0] + surf.get_size()[0]//2,
-                coords[1] - self.arrowOffset[1] + surf.get_size()[1]//2)
-
-    def viewToModel(self, coords, surf):
-        return (coords[0] + self.arrowOffset[0] - surf.get_size()[0]//2,
-                coords[1] + self.arrowOffset[1] - surf.get_size()[1]//2) 
-
-    def drawMap(self):
-        coords = self.modelToView(self.map2Rect, self.mainSurf.surf)
-
-        self.mainSurf.surf.blit(self.map2image, 
-                 pygame.Rect(coords[0], coords[1],
-                 self.map2Rect.w, self.map2Rect.h))
-    
     def drawRoutes(self):
         segs = self.router.getAllSegments(onFloor=self.selFloor)
 
@@ -226,20 +186,6 @@ class RoutePlanningMode(PygameMode):
 
             pygame.draw.line(self.mainSurf.surf, (0,0,255),
                     p1m, p2m)
-
-    def drawCornerMsg(self):
-        boxSize = (0,0,140,30)
-        pygame.draw.rect(self.mainSurf.surf, (255,255,255),
-                boxSize)
-        pygame.draw.rect(self.mainSurf.surf, (0,0,0),
-                boxSize,1)
-
-        dfont = pygame.font.SysFont("monospace", 25)
-        label = dfont.render(
-                "Floor: %d" % self.selFloor,
-                1, (10,10,10))
-        self.mainSurf.surf.blit(label, (3, 0))
-
 
     def drawView(self,screen):
         self.mainSurf.surf.fill((200,200,200))
