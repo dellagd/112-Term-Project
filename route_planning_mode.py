@@ -14,29 +14,56 @@ class RoutePlanningMode(PygameMode):
         self.surfaces.append(self.mainSurf)
         
         self.textBox = user_input.TextInputBox()
-
         self.arrowOffset = [2300,3200]
-        self.selFloor = 2
-        self.selBuilding = "GHC"
+
+        self.initData()
+        self.initFloorData()
+        self.initMap()
+        self.initRouteNodes()
         self.newFloor(self.selFloor)
 
-        self.pointQueue = []
-        self.lastPoint = None
-
-        self.initMap()
+        self.testRoute()
         
     def initMap(self):
         self.map2image = pygame.image.load(
                 Constants.buildings[self.selBuilding].getFloor(self.selFloor))
         self.map2Rect = self.map2image.get_rect()
 
+    def initRouteNodes(self):
         self.routeNodes = self.RouteNodeHandler(mToV=self.modelToView,
                 vToM=self.viewToModel)
+        self.refreshNodes()
         self.mainSurf.objects.append(self.routeNodes)
 
+    def initData(self):
+        self.pointQueue = []
+        self.lastPoint = None
+
+    def initFloorData(self):
+        self.selFloor = 2
+        self.selBuilding = "GHC"
+
+    def testRoute(self):
+        nodeA = self.router.getRoomNode("Parking - 1")
+        nodeB = self.router.getRoomNode("4303")
+
+        print("\nRoute: %r" % self.router.findRoute(nodeA,nodeB))
+
+    def upAFloor(self):
+        if self.selFloor < Constants.buildings[self.selBuilding].maxFloor:
+            self.newFloor(self.selFloor+1)
+
+    def downAFloor(self):
+        if self.selFloor > Constants.buildings[self.selBuilding].minFloor:
+            self.newFloor(self.selFloor-1)
+    
     def newFloor(self, floor):
         self.selFloor = floor
         self.zPos = (self.selFloor-1) * Constants.floorHeight
+
+        self.initData()
+        self.initMap()
+        self.refreshNodes()
 
     def removeLastAddedSegment(self):
         if len(self.pointQueue) < 1: return False
@@ -167,7 +194,10 @@ class RoutePlanningMode(PygameMode):
 
             self.selectedPoint = found
 
-        
+    def refreshNodes(self):
+        self.routeNodes.purgeNodes(
+                self.router.getAllNodes(onFloor=self.selFloor))
+
     #############################################
 
     def modelToView(self, coords, surf):
@@ -186,7 +216,7 @@ class RoutePlanningMode(PygameMode):
                  self.map2Rect.w, self.map2Rect.h))
     
     def drawRoutes(self):
-        segs = self.router.getAllSegments()
+        segs = self.router.getAllSegments(onFloor=self.selFloor)
 
         for seg in segs:
             pos1, pos2 = seg["LOC_A"], seg["LOC_B"]
@@ -198,11 +228,17 @@ class RoutePlanningMode(PygameMode):
                     p1m, p2m)
 
     def drawCornerMsg(self):
-        dfont = pygame.font.SysFont("monospace", 15)
+        boxSize = (0,0,140,30)
+        pygame.draw.rect(self.mainSurf.surf, (255,255,255),
+                boxSize)
+        pygame.draw.rect(self.mainSurf.surf, (0,0,0),
+                boxSize,1)
+
+        dfont = pygame.font.SysFont("monospace", 25)
         label = dfont.render(
                 "Floor: %d" % self.selFloor,
                 1, (10,10,10))
-        self.mainSurf.surf.blit(label, (0, 0))
+        self.mainSurf.surf.blit(label, (3, 0))
 
 
     def drawView(self,screen):
@@ -255,15 +291,16 @@ class RoutePlanningMode(PygameMode):
             self.arrowOffset[0] -= int(100 * mult)
         elif event.key == pygame.K_RIGHT:
             self.arrowOffset[0] += int(100 * mult)
+        elif event.key == pygame.K_PAGEUP:
+            self.upAFloor()
+        elif event.key == pygame.K_PAGEDOWN:
+            self.downAFloor()
         elif event.key == pygame.K_u:
             self.removeLastAddedSegment()
-            self.routeNodes.purgeNodes(
-                    self.router.getAllNodes(onFloor=self.selFloor))
-        
+            self.refreshNodes() 
         if event.key == pygame.K_SPACE:
             print("Space!")
-            self.routeNodes.purgeNodes(
-                    self.router.getAllNodes(onFloor=self.selFloor))
+            self.refreshNodes()
             self.routeNodes.clearSelection()
             self.lastPoint = None
 

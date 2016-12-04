@@ -3,9 +3,9 @@ from mapcmu_data import *
 
 class RoutingEngine(object):
     def __init__(self):
-        self.db = mongodb_databases.MDBDatabase("MapCMU_test")
+        self.db = mongodb_databases.MDBDatabase("MapCMU")
         self.segTable = mongodb_databases.SegmentTable(self.db.database)
-        self.segTable.nukeTable()
+        #self.segTable.nukeTable()
 
     def testTable(self):
         self.segTable.addSegment([10,10,0,"GHC"], [10,100,0,"GHC"])
@@ -19,6 +19,11 @@ class RoutingEngine(object):
         self.segTable.addSegment([100,150,0,"GHC"], [200,220,0,"GHC"])
         
 
+    def getRoomNode(self, room):
+        return  self.segTable.collection.find(
+                {"NOTE" : room})[0]["LOC_A"]
+
+
     def getAllSegments(self, onFloor=None):
         if onFloor == None:
             return self.segTable.collection.find()
@@ -27,7 +32,7 @@ class RoutingEngine(object):
             floorZ = (onFloor-1) * Constants.floorHeight
             segments = self.segTable.collection.find()
             for seg in segments:
-                if seg["LOC_A"][2] == floorZ or seg["LOC_B"][2] == floorZ:
+                if seg["LOC_A"][2] == floorZ and seg["LOC_B"][2] == floorZ:
                     floorSegList.append(seg)
 
             return floorSegList
