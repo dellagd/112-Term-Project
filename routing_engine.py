@@ -1,4 +1,5 @@
 import mongodb_databases
+from mapcmu_data import *
 
 class RoutingEngine(object):
     def __init__(self):
@@ -18,13 +19,23 @@ class RoutingEngine(object):
         self.segTable.addSegment([100,150,0,"GHC"], [200,220,0,"GHC"])
         
 
-    def getAllSegments(self):
-        return self.segTable.collection.find()
+    def getAllSegments(self, onFloor=None):
+        if onFloor == None:
+            return self.segTable.collection.find()
+        else:
+            floorSegList = []
+            floorZ = (onFloor-1) * Constants.floorHeight
+            segments = self.segTable.collection.find()
+            for seg in segments:
+                if seg["LOC_A"][2] == floorZ or seg["LOC_B"][2] == floorZ:
+                    floorSegList.append(seg)
 
-    def getAllNodes(self):
+            return floorSegList
+
+    def getAllNodes(self, onFloor=None):
         locs = set()
 
-        for row in self.getAllSegments():
+        for row in self.getAllSegments(onFloor):
             locs.add(tuple(row["LOC_A"]))
             locs.add(tuple(row["LOC_B"]))
 

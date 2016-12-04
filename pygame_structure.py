@@ -108,6 +108,7 @@ class PygameMode():
 
     def keyPressed(self, event):
         # Override this! (and call super)
+        ctrl = pygame.key.get_mods() & pygame.KMOD_CTRL
         if event.key == pygame.K_ESCAPE or (event.key == pygame.K_c and ctrl):
             quit()
         

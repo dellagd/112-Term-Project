@@ -72,6 +72,12 @@ class RoutePlanningMode(PygameMode):
             
             rId = self.addSegmentToMap(aLoc, bLoc)
             self.pointQueue.append((rId,aLoc,bLoc))
+            
+            if pygame.key.get_mods() & pygame.KMOD_CTRL:
+                self.textBox.doPopup("Enter room", self.textBoxCallback,
+                        args=(rId,))
+            
+            return rId
 
     def addSegmentToMap(self, pos1, pos2):
         return self.router.segTable.addSegment(
@@ -79,6 +85,11 @@ class RoutePlanningMode(PygameMode):
             [pos2[0],pos2[1],self.zPos,self.selBuilding]
             ) # Returns entry id
     
+    def textBoxCallback(self, text, rId):
+        print(text, rId)
+        self.router.segTable.collection.update({"_id" : rId},
+                {"$set" : {"NOTE" : text}})
+
     ##################################################
     
     class RouteNode(PygameObject):
@@ -127,9 +138,11 @@ class RoutePlanningMode(PygameMode):
                 if node.pos == remNode:
                     self.objects.remove(node)
 
-        def purgePoints(self):
-            # Implement if needed
-            pass
+        def purgeNodes(self, dbNodes):
+            self.objects = []
+
+            for node in dbNodes:
+                self.addNode((node[0],node[1]))
         
         def getSelectedPosition(self):
             if self.selectedPoint == None:
@@ -200,13 +213,16 @@ class RoutePlanningMode(PygameMode):
         self.mainSurf.drawObjects(offset=tuple(self.arrowOffset))
         self.drawCornerMsg()
 
-        #self.textBox.drawBox(self.mainSurf.surf)
+        if self.textBox.enabled:
+            self.textBox.drawBox(self.mainSurf.surf)
     
         super().drawView(screen)
 
 #######################################
 
     def mousePressed(self, event):
+        if self.textBox.enabled: return
+        
         # Do events for contained pygameobjects first
         self.mainSurf.mouseObjects(event, self.arrowOffset)
         
@@ -218,13 +234,17 @@ class RoutePlanningMode(PygameMode):
         else:
             self.routeNodes.addNode((xm, ym))
 
-        self.checkAndAddSegment((xm,ym), self.lastPoint)
+        segId = self.checkAndAddSegment((xm,ym), self.lastPoint)
 
         self.lastPoint = (xm, ym)
 
     def keyPressed(self, event):
         super().keyPressed(event)
-        
+       
+        if self.textBox.enabled:
+            self.textBox.keyPressed(event)
+            return
+
         mult = .1 if pygame.key.get_mods() & pygame.KMOD_SHIFT else 1
         ctrl = pygame.key.get_mods() & pygame.KMOD_CTRL 
         if event.key == pygame.K_UP:
@@ -237,9 +257,17 @@ class RoutePlanningMode(PygameMode):
             self.arrowOffset[0] += int(100 * mult)
         elif event.key == pygame.K_u:
             self.removeLastAddedSegment()
+            self.routeNodes.purgeNodes(
+                    self.router.getAllNodes(onFloor=self.selFloor))
         
         if event.key == pygame.K_SPACE:
             print("Space!")
+            self.routeNodes.purgeNodes(
+                    self.router.getAllNodes(onFloor=self.selFloor))
             self.routeNodes.clearSelection()
             self.lastPoint = None
+
+        if event.key == pygame.K_a:
+            # TESTING POPUP
+            self.textBox.doPopup("Room", self.textBoxCallback)
 
