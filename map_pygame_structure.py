@@ -13,6 +13,8 @@ class MapPygameMode(PygameMode):
         
         self.arrowOffset = [2300,3200]
 
+        self.showHelp = False
+
         self.initFloorData()
         MapPygameMode.newFloor(self, self.selFloor)
 
@@ -49,6 +51,46 @@ class MapPygameMode(PygameMode):
         return (coords[0] + self.arrowOffset[0] - surf.get_size()[0]//2,
                 coords[1] + self.arrowOffset[1] - surf.get_size()[1]//2) 
 
+    def drawTextAt(self, text, pos, size=18, color=(10,10,10), bold=False):
+        dfont = pygame.font.SysFont("arial", size, bold=bold)
+        label = dfont.render(
+                text,
+                1, color)
+        self.mainSurf.surf.blit(label, pos)
+
+    def drawHelpOverlay(self, mlString):
+        surfSize = self.mainSurf.surf.get_size()
+        
+        border = 80
+        pygame.draw.rect(self.mainSurf.surf, (255,255,255),
+                (border,border,surfSize[0]-border*2,surfSize[1]-border*2))
+        pygame.draw.rect(self.mainSurf.surf, (0,0,0),
+                (border,border,surfSize[0]-border*2,surfSize[1]-border*2),
+                1)
+
+        self.drawTextAt("HELP", (border+10,border+10),
+                color=(255,0,0), size=35, bold=True)
+
+    def drawFooterHelp(self):
+        surfSize = self.mainSurf.surf.get_size()
+        boxH = 30
+
+        pygame.draw.rect(self.mainSurf.surf, (255,255,255),
+                (0, surfSize[1] - boxH, surfSize[0], boxH))
+        pygame.draw.rect(self.mainSurf.surf, (0,0,0),
+                (0, surfSize[1] - boxH, surfSize[0], boxH),
+                1)
+
+        msg = Constants.footerHelp
+        dfont = pygame.font.SysFont("arial", 18)
+        msgSize = dfont.size(msg)
+        boxY = msgSize[1]/2 + boxH/2 
+        label = dfont.render(
+                msg,
+                1, (10,10,10))
+        self.mainSurf.surf.blit(label, 
+                (surfSize[0]/2 - msgSize[0]/2, surfSize[1]-boxY))
+
     def drawMap(self):
         coords = self.modelToView(self.map2Rect, self.mainSurf.surf)
 
@@ -58,6 +100,7 @@ class MapPygameMode(PygameMode):
 
     def drawCornerMsg(self):
         boxSize = (0,0,140,30)
+        txtPos = (5,2)
         pygame.draw.rect(self.mainSurf.surf, (255,255,255),
                 boxSize)
         pygame.draw.rect(self.mainSurf.surf, (0,0,0),
@@ -67,5 +110,5 @@ class MapPygameMode(PygameMode):
         label = dfont.render(
                 "Floor: %d" % self.selFloor,
                 1, (10,10,10))
-        self.mainSurf.surf.blit(label, (3, 0))
+        self.mainSurf.surf.blit(label, txtPos)
 

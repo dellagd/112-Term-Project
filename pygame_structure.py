@@ -2,6 +2,7 @@ import threading
 import os, sys, time
 import pygame
 import color_constants
+from mapcmu_data import *
 
 if not pygame.font: print ('Warning, fonts disabled')
 if not pygame.mixer: print ('Warning, sound disabled')
@@ -93,7 +94,7 @@ class PygameMode():
         background = pygame.Surface(self.screenDims)
         background.fill(self.bkcolor)
         self.surfaces.append(background)
-       
+      
     def drawView(self, screen):        
         for surface in self.surfaces:
             #print("Mode: %s Surface: %s" % (self.currentMode, surfaceKey))

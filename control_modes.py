@@ -2,6 +2,7 @@ from pygame_structure import *
 import user_input
 from mapcmu_data import *
 import localization_engine
+import time
 
 class SelectionMode(PygameMode):
     def __init__(self, call):
@@ -142,18 +143,26 @@ class NavigateMode(PygameMode):
         self.localize.daemon = True
         self.localize.start()
 
+        self.waiting = False
+        self.startWaiting = 0
+
         self.entryText = ""
 
     ###############################################
 
     def requestRouteTo(self):
         self.localize.beginLocalization(3, self.route)
+        self.waiting = True
+        self.startWaiting = time.time()
 
     def route(self, fromPos):
         locA = fromPos
         locB = self.entryText
 
-        self.changeModeFn("Routing", args=(locA,locB))
+        self.waiting = False
+
+        viewPos = (fromPos[0], fromPos[1])
+        self.changeModeFn("Routing", args=(locA,locB,viewPos))
         
 
     ###############################################
@@ -207,12 +216,30 @@ class NavigateMode(PygameMode):
                 msg,
                 1, (240,240,0))
         self.mainSurf.surf.blit(label,
-                (self.surfDims[0]/2 - sizeText[0]/2, yPos))
+            (self.surfDims[0]/2 - sizeText[0]/2, yPos))
+
+    def drawWaiting(self):
+        msg = "Localizing"
+        curTime = time.time() - self.startWaiting
+        dots = (int(curTime)//2)%3
+        msg += '.'*(dots+1)
+
+        offset = 100
+        dfont = pygame.font.SysFont("arial", 50)
+        sizeText = dfont.size(msg)
+        label = dfont.render(
+                msg,
+                1, (240,240,0))
+        textPos = (self.surfDims[0]/2 - sizeText[0]/2,
+                    self.surfDims[1] - sizeText[1] - offset)
+        self.mainSurf.surf.blit(label,textPos)
 
     def drawView(self, screen):
         self.mainSurf.surf.fill(self.bk)
         self.drawWelcome()
         self.drawTextBox()
+        if self.waiting:
+            self.drawWaiting()
 
         super().drawView(screen)
 

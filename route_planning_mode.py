@@ -194,6 +194,10 @@ class RoutePlanningMode(MapPygameMode):
         self.drawRoutes()
         self.mainSurf.drawObjects(offset=tuple(self.arrowOffset))
         self.drawCornerMsg()
+        self.drawFooterHelp()
+
+        if self.showHelp:
+            self.drawHelpOverlay("")
 
         if self.textBox.enabled:
             self.textBox.drawBox(self.mainSurf.surf)
@@ -243,7 +247,9 @@ class RoutePlanningMode(MapPygameMode):
             self.downAFloor()
         elif event.key == pygame.K_u:
             self.removeLastAddedSegment()
-            self.refreshNodes() 
+            self.refreshNodes()
+        elif event.key == pygame.K_h:
+            self.showHelp = not self.showHelp
         elif event.key == pygame.K_SPACE:
             print("Space!")
             self.refreshNodes()

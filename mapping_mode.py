@@ -263,6 +263,7 @@ class MappingMode(MapPygameMode):
         self.pointPopup.point = self.mapPoints.selectedPoint
         self.mainSurf.drawObjects(offset=tuple(self.arrowOffset))
         self.drawCornerMsg()
+        self.drawFooterHelp()
 
         dfont = pygame.font.SysFont("monospace", 15)
         label = dfont.render(

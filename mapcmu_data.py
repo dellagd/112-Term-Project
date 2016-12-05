@@ -19,3 +19,5 @@ class Constants(object):
     floorHeight = 600
 
     database = "MapCMU"
+
+    footerHelp = "ESC: Return to Previous Mode | H: Toggle Help | Ctrl-C: Exit"

@@ -7,13 +7,14 @@ import math
 import localization_engine
 
 class ForwardRoutingMode(MapPygameMode):
-    def __init__(self, call, args=("Parking - 1", "Rashid")):
+    def __init__(self, call, args=("Parking - 1", "Rashid", (2300,3200))):
         MapPygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800),
                 changeModeFn=call)
         self.router = routing_engine.RoutingEngine()
 
         self.plannedRoute = []
 
+        self.arrowOffset = list(args[2])
         self.getRoute(args)
 
     def getRoute(self, args):
@@ -96,6 +97,7 @@ class ForwardRoutingMode(MapPygameMode):
         self.drawSegments()
         self.drawPoints()
         self.drawCornerMsg()
+        self.drawFooterHelp()
 
         #if self.textBox.enabled:
         #    self.textBox.drawBox(self.mainSurf.surf)
