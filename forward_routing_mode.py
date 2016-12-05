@@ -6,16 +6,17 @@ from mapcmu_data import *
 import math
 
 class ForwardRoutingMode(MapPygameMode):
-    def __init__(self):
-        MapPygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800))
+    def __init__(self, call, args=("Parking - 1", "Rashid")):
+        MapPygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800),
+                changeModeFn=call)
         self.router = routing_engine.RoutingEngine()
 
         self.plannedRoute = []
-        self.testRoute()
+        self.getRoute(args)
 
-    def testRoute(self):
-        nodeB = self.router.getRoomNode("Parking - 1")
-        nodeA = self.router.getRoomNode("4303")
+    def getRoute(self, args):
+        nodeA = self.router.getRoomNode(args[0])
+        nodeB = self.router.getRoomNode(args[1])
 
         self.plannedRoute = list(map(lambda x: x.info,
                 self.router.findRoute(nodeA,nodeB)))
@@ -118,3 +119,5 @@ class ForwardRoutingMode(MapPygameMode):
             self.upAFloor()
         elif event.key == pygame.K_PAGEDOWN:
             self.downAFloor()
+        elif event.key == pygame.K_ESCAPE:
+            self.changeModeFn()

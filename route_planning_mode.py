@@ -6,8 +6,8 @@ from mapcmu_data import *
 import math
 
 class RoutePlanningMode(MapPygameMode):
-    def __init__(self):
-        MapPygameMode.__init__(self)
+    def __init__(self, call):
+        MapPygameMode.__init__(self, changeModeFn=call)
         self.router = routing_engine.RoutingEngine()
         
         self.textBox = user_input.TextInputBox()
@@ -244,13 +244,14 @@ class RoutePlanningMode(MapPygameMode):
         elif event.key == pygame.K_u:
             self.removeLastAddedSegment()
             self.refreshNodes() 
-        if event.key == pygame.K_SPACE:
+        elif event.key == pygame.K_SPACE:
             print("Space!")
             self.refreshNodes()
             self.routeNodes.clearSelection()
             self.lastPoint = None
-
-        if event.key == pygame.K_a:
+        elif event.key == pygame.K_ESCAPE:
+            self.changeModeFn()
+        elif event.key == pygame.K_a:
             # TESTING POPUP
             self.textBox.doPopup("Room", self.textBoxCallback)
 

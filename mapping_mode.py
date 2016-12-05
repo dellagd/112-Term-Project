@@ -7,8 +7,9 @@ import datetime
 import math
 
 class MappingMode(PygameMode):
-    def __init__(self):
-        PygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800))
+    def __init__(self, changeModeFn=None):
+        PygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800),
+                changeModeFn=changeModeFn)
         
         self.initMap()
         self.surfaces.append(self.map2)
@@ -297,6 +298,8 @@ class MappingMode(PygameMode):
             self.recording = False
             self.possiblePos = []
             self.currentPos = None
+        elif event.key == pygame.K_ESCAPE:
+            self.changeModeFn()
         elif event.key in keyPadNums:
             num = keyPadNums.index(event.key)
             self.handleKeypad(event, num)

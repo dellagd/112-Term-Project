@@ -13,7 +13,7 @@ class MainPygame(threading.Thread):
         self.lock = threading.RLock()
         self.alive = True
         self.modes = {}
-        self.modes['default'] = PygameMode()
+        self.modes['default'] = BootingMode()
         self.currentMode = self.modes['default']
 
     def __sleepFPS(self, fps, start, end):
@@ -79,11 +79,13 @@ class MainPygame(threading.Thread):
         return pygame
 
 class PygameMode():
-    def __init__(self, screenDims=(640,400), fps=60, bkcolor=(100,100,100)):
+    def __init__(self, screenDims=(640,400), fps=60, 
+            bkcolor=(100,100,100), changeModeFn=None):
         threading.Thread.__init__(self)
         self.fps = fps
         self.bkcolor = bkcolor
         self.screenDims = screenDims
+        self.changeModeFn = changeModeFn
         self.initView()
 
     def initView(self):
@@ -109,7 +111,7 @@ class PygameMode():
     def keyPressed(self, event):
         # Override this! (and call super)
         ctrl = pygame.key.get_mods() & pygame.KMOD_CTRL
-        if event.key == pygame.K_ESCAPE or (event.key == pygame.K_c and ctrl):
+        if (event.key == pygame.K_c and ctrl):
             quit()
         
 
@@ -133,7 +135,7 @@ class PygameMode():
         return self.surfaces[i]
 
 class PygameObject(object):
-    def __init__(self, pos=(0,0), mToV=lambda x:x, vToM=lambda x:x):
+    def __init__(self, pos=(0,0), mToV=lambda *x:x[0], vToM=lambda *x:x[0]):
         self.mToV = mToV
         self.vToM = vToM
         self.objects = []
@@ -168,3 +170,22 @@ class SurfacePlus(object):
         for obj in self.objects:
             obj.mousePressed(self, event.pos[0],
                     event.pos[1])
+
+class BootingMode(PygameMode):
+    def __init__(self, screenDims=(1000,800), bkcolor=(200,200,200)):
+        PygameMode.__init__(self,screenDims=screenDims,bkcolor=bkcolor)
+        self.mainSurf = SurfacePlus()
+        self.mainSurf.surf = pygame.Surface(self.screenDims)
+        self.surfaces.append(self.mainSurf)
+
+        self.map2image = pygame.image.load("splash.jpg")
+        self.map2Rect = self.map2image.get_rect()
+
+    def drawView(self, screen):
+        #self.mainSurf.surf.fill((0,255,255))
+        self.mainSurf.surf.blit(self.map2image, 
+                 pygame.Rect(0, 0,
+                 self.map2Rect.w, self.map2Rect.h))
+
+        super().drawView(screen)
+

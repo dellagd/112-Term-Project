@@ -117,8 +117,8 @@ class RoutingEngine(object):
         closedNodes = list()
 
         while(True):
-            print("Open: %r" % openNodes)
-            print("Closed: %r" % closedNodes)
+            #print("Open: %r" % openNodes)
+            #print("Closed: %r" % closedNodes)
 
             currentNode = self.findLowestFCost(openNodes,dst)
             if currentNode == None: 
