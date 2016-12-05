@@ -3,7 +3,7 @@ from mapcmu_data import *
 
 class RoutingEngine(object):
     def __init__(self):
-        self.db = mongodb_databases.MDBDatabase("MapCMU")
+        self.db = mongodb_databases.MDBDatabase(Constants.database)
         self.segTable = mongodb_databases.SegmentTable(self.db.database)
         #self.segTable.nukeTable()
 

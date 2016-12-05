@@ -35,20 +35,26 @@ class MainProgram(threading.Thread):
             self.upAMode()
             return
         else:
-            del self.myPygame.modes[mode]
             if mode == "Mapping":
+                self.myPygame.modes[mode].scanner.kill = True
+                del self.myPygame.modes[mode]
                 self.modeMapping = MappingMode(self.changeMode)
                 self.myPygame.addMode(self.modeMapping, mode)
             elif mode == "Route Planning":
+                del self.myPygame.modes[mode]
                 self.modeRoutePlan = RoutePlanningMode(self.changeMode)
                 self.myPygame.addMode(self.modeRoutePlan, mode)
             elif mode == "Routing":
+                del self.myPygame.modes[mode]
                 self.modeRouting = ForwardRoutingMode(self.changeMode, args=args)
                 self.myPygame.addMode(self.modeRouting, mode)
             elif mode == "Select":
+                del self.myPygame.modes[mode]
                 self.modeSelect = SelectionMode(self.changeMode)
                 self.myPygame.addMode(self.modeSelect, mode)
             elif mode == "Navigate":
+                self.myPygame.modes[mode].localize.kill = True
+                del self.myPygame.modes[mode]
                 self.modeNav = NavigateMode(self.changeMode)
                 self.myPygame.addMode(self.modeNav, mode)
 

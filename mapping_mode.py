@@ -1,20 +1,18 @@
-from pygame_structure import *
+from map_pygame_structure import *
 from functools import reduce
 import mongodb_databases
+from mapcmu_data import *
 import ScannerUtils, StatModelForAPs
 from ast import literal_eval
 import datetime
 import math
 
-class MappingMode(PygameMode):
+class MappingMode(MapPygameMode):
     def __init__(self, changeModeFn=None):
-        PygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800),
+        MapPygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800),
                 changeModeFn=changeModeFn)
         
-        self.initMap()
-        self.surfaces.append(self.map2)
-        
-        self.arrowOffset = [+2300,+3200]
+        self.initData()
 
         self.recording = False
         self.recStart = ""
@@ -24,7 +22,7 @@ class MappingMode(PygameMode):
         self.currentPos = None
 
         self.mapByLoc = {}
-        self.db = mongodb_databases.MDBDatabase("MapCMU")
+        self.db = mongodb_databases.MDBDatabase(Constants.database)
         self.mapTable = mongodb_databases.MapTable(self.db.database)
         self.initFromDatabase()
         self.pointPopup.setTable(self.mapTable)
@@ -37,23 +35,18 @@ class MappingMode(PygameMode):
         self.statmodel = StatModelForAPs.ProbabilisticMap(
                 self.scanner, self.mapTable)
 
-    def initMap(self):
-        self.map2image= pygame.image.load("Gates-2.jpg")
-        self.map2Rect = self.map2image.get_rect()
-        self.map2 = SurfacePlus()
-        
+    def initData(self):
         self.mapPoints = self.MapPointHandler(mToV=self.modelToView,
                 vToM=self.viewToModel)
-        self.map2.objects.append(self.mapPoints)
+        self.mainSurf.objects.append(self.mapPoints)
 
         self.pointPopup = self.MapPopup()
-        self.map2.objects.append(self.pointPopup)
+        self.mainSurf.objects.append(self.pointPopup)
 
         self.locPoint = self.FoundPoint(mToV=self.modelToView,
                 vToM=self.viewToModel)
-        self.map2.objects.append(self.locPoint)
-            
-        self.map2.surf = pygame.Surface(self.screenDims)
+        self.locPoint.floorChange(self.zPos)
+        self.mainSurf.objects.append(self.locPoint)
 
     def initFromDatabase(self):
         self.regenerateMapPoints()
@@ -62,7 +55,8 @@ class MappingMode(PygameMode):
         if self.recording:
             self.resultTick += 1
             for apRow in result:
-                location = "(%d, %d)"%(self.arrowOffset[0],self.arrowOffset[1])
+                location = "(%d, %d, %d)"%(self.arrowOffset[0],
+                        self.arrowOffset[1], self.zPos)
                 self.statmodel.addResultRow(location, apRow["BSSID"],
                         apRow["RSSI"], self.recStart)
            
@@ -76,19 +70,38 @@ class MappingMode(PygameMode):
                 self.possiblePos.append(literal_eval(self.statmodel.findLocation(result)))
 
             count = len(self.possiblePos)
-            self.currentPos = reduce(lambda x,y: (x[0] + y[0], x[1]+y[1]),
-                    self.possiblePos, (0,0))
+            self.currentPos = reduce(lambda x,y: (
+                    x[0]+y[0], x[1]+y[1], x[2]+y[2]),
+                    self.possiblePos, (0,0,0))
+
             self.currentPos = (self.currentPos[0] / count,
-                    self.currentPos[1] / count)
+                    self.currentPos[1] / count,
+                    self.coerceZPos(self.currentPos[2] / count))
 
             self.locPoint.updatePos(self.currentPos)
+
+    def coerceZPos(self, z):
+        maxFloor = Constants.buildings[self.selBuilding].maxFloor
+        minFloor = Constants.buildings[self.selBuilding].minFloor
+
+        for floor in range(minFloor, maxFloor+1):
+            zPos = (floor-1) * Constants.floorHeight
+            zRange = (zPos - Constants.floorHeight/2,
+                      zPos + Constants.floorHeight/2)
+
+            if z > zRange[0] and z <= zRange[1]:
+                return zPos
+        print("Out of range!")
 
     def regenerateMapPoints(self):
         self.mapPoints.objects = []
         possibleLocs = self.mapTable.collection.distinct("Location")
        
         for loc in possibleLocs:
-            self.mapPoints.addPoint(literal_eval(loc))
+            locT = literal_eval(loc)
+            if locT[2] != self.zPos: continue
+
+            self.mapPoints.addPoint(locT)
 
 #######################################
 
@@ -122,15 +135,21 @@ class MappingMode(PygameMode):
             self.radius = 6 # Size for triangle 
             self.color = (255,0,255)
             self.enabled = False
+            self.zPos = None
+            self.pos = (0,0,0)
 
         def updatePos(self, pos):
             if pos != None:
                 self.enabled = True
                 self.pos = pos
 
+        def floorChange(self, zPos):
+            self.zPos = zPos
+
         def draw(self, surface, dims, offset=(0,0)):
             if not self.enabled: return
-
+            if self.pos[2] != self.zPos: return
+    
             coords = self.mToV(self.pos, surface.surf)
             self.drawTriangleAtPoint(surface.surf, coords, self.radius)
 
@@ -218,11 +237,11 @@ class MappingMode(PygameMode):
                 coords[1] + self.arrowOffset[1] - surf.get_size()[1]//2) 
 
     def drawMap(self):
-        self.map2.surf.fill((200,200,200))
+        self.mainSurf.surf.fill((200,200,200))
     
-        coords = self.modelToView(self.map2Rect, self.map2.surf)
+        coords = self.modelToView(self.map2Rect, self.mainSurf.surf)
 
-        self.map2.surf.blit(self.map2image, 
+        self.mainSurf.surf.blit(self.map2image, 
                  pygame.Rect(coords[0], coords[1],
                  self.map2Rect.w, self.map2Rect.h))
        
@@ -232,9 +251,9 @@ class MappingMode(PygameMode):
         cursorVert = (mid[1] - cursorSize//2, mid[1] + cursorSize//2)
         cursorHorz = (mid[0] - cursorSize//2, mid[0] + cursorSize//2)
 
-        pygame.draw.line(self.map2.surf, (255,0,0), # Vertical Line
+        pygame.draw.line(self.mainSurf.surf, (255,0,0), # Vertical Line
                 (mid[0], cursorVert[1]), (mid[0], cursorVert[0]))
-        pygame.draw.line(self.map2.surf, (255,0,0), # Horizontal Line
+        pygame.draw.line(self.mainSurf.surf, (255,0,0), # Horizontal Line
                 (cursorHorz[1], mid[1]), (cursorHorz[0], mid[1]))
         
     def drawView(self, screen):
@@ -242,20 +261,21 @@ class MappingMode(PygameMode):
         self.drawCursor() # Draws cursor in screen center
         
         self.pointPopup.point = self.mapPoints.selectedPoint
-        self.map2.drawObjects(offset=tuple(self.arrowOffset))
+        self.mainSurf.drawObjects(offset=tuple(self.arrowOffset))
+        self.drawCornerMsg()
 
         dfont = pygame.font.SysFont("monospace", 15)
         label = dfont.render(
                 "Position (x,y): (%d,%d)" % (self.arrowOffset[0], self.arrowOffset[1]),
                 1, (10,10,10))
-        self.map2.surf.blit(label, (0, 0))
+        self.mainSurf.surf.blit(label, (0, 35))
 
         if (self.recording or self.finding):
             label = dfont.render(
                     "RECORDING (%d)" % self.resultTick if self.recording \
                         else "FINDING (%d): %s" % (self.resultTick,self.currentPos),
                     1, (255,0,0))
-            self.map2.surf.blit(label, (0, 20))
+            self.mainSurf.surf.blit(label, (0, 55))
 
 
         super().drawView(screen)
@@ -263,7 +283,7 @@ class MappingMode(PygameMode):
 #######################################
 
     def mousePressed(self, event):
-        self.map2.mouseObjects(event, self.arrowOffset)
+        self.mainSurf.mouseObjects(event, self.arrowOffset)
 
     def keyPressed(self, event):
         super().keyPressed(event)
@@ -282,6 +302,14 @@ class MappingMode(PygameMode):
             self.arrowOffset[0] -= int(100 * mult)
         elif event.key == pygame.K_RIGHT:
             self.arrowOffset[0] += int(100 * mult)
+        elif event.key == pygame.K_PAGEUP:
+            self.upAFloor()
+            self.regenerateMapPoints()
+            self.locPoint.floorChange(self.zPos)
+        elif event.key == pygame.K_PAGEDOWN:
+            self.downAFloor()
+            self.regenerateMapPoints()
+            self.locPoint.floorChange(self.zPos)
         elif event.key == pygame.K_r:
             self.resultTick = 0
             self.recording = not self.recording

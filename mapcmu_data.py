@@ -17,3 +17,5 @@ class Constants(object):
         "Gates-6.jpg", "Gates-7.jpg", "Gates-8.jpg",
         "Gates-9.jpg"])
     floorHeight = 600
+
+    database = "MapCMU"

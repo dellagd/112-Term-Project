@@ -4,6 +4,7 @@ import routing_engine
 import user_input
 from mapcmu_data import *
 import math
+import localization_engine
 
 class ForwardRoutingMode(MapPygameMode):
     def __init__(self, call, args=("Parking - 1", "Rashid")):
@@ -12,11 +13,16 @@ class ForwardRoutingMode(MapPygameMode):
         self.router = routing_engine.RoutingEngine()
 
         self.plannedRoute = []
+
         self.getRoute(args)
 
     def getRoute(self, args):
-        nodeA = self.router.getRoomNode(args[0])
         nodeB = self.router.getRoomNode(args[1])
+
+        if isinstance(args[0], str):
+            nodeA = self.router.getRoomNode(args[0])
+        else:
+            nodeA = args[0]
 
         self.plannedRoute = list(map(lambda x: x.info,
                 self.router.findRoute(nodeA,nodeB)))

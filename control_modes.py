@@ -1,6 +1,7 @@
 from pygame_structure import *
 import user_input
 from mapcmu_data import *
+import localization_engine
 
 class SelectionMode(PygameMode):
     def __init__(self, call):
@@ -137,13 +138,19 @@ class NavigateMode(PygameMode):
         self.surfDims = self.mainSurf.surf.get_size()
         self.surfaces.append(self.mainSurf)
 
+        self.localize = localization_engine.LocalizationEngine()
+        self.localize.daemon = True
+        self.localize.start()
+
         self.entryText = ""
 
     ###############################################
 
-    def route(self):
-        locA = "Parking - 1" # GET FROM LOCALIZING ENGINE
-        
+    def requestRouteTo(self):
+        self.localize.beginLocalization(3, self.route)
+
+    def route(self, fromPos):
+        locA = fromPos
         locB = self.entryText
 
         self.changeModeFn("Routing", args=(locA,locB))
@@ -221,7 +228,7 @@ class NavigateMode(PygameMode):
         elif event.key == pygame.K_BACKSPACE:
             self.entryText = self.entryText[:-1]
         elif event.key == pygame.K_RETURN:
-            self.route()
+            self.requestRouteTo()
         elif event.key < 127: # An alpha key
             char = event.key
             if shift: char -= 32

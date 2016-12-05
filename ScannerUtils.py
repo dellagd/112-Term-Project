@@ -12,6 +12,7 @@ class APScanner(threading.Thread):
         self.loopPrint = lp
         self.trigFuncs = [trigFunc]
         self.__populateMap()
+        self.kill = False
     
     def run(self):
         self.__mainloop()
@@ -89,7 +90,7 @@ class APScanner(threading.Thread):
 
     def __mainloop(self):
         devnull = open(os.devnull, 'w')
-        while True:
+        while not self.kill:
             out = check_output(
                     "echo 'password' | sudo -kS iw dev wlan0 scan | gawk -f scan.awk",
                     shell=True, stderr=devnull)
@@ -129,7 +130,8 @@ class APScanner(threading.Thread):
 
             if (self.loopPrint): self.__repr__()
 
-        
+            time.sleep(0.01)
+
 class FoundAP(object):
     def __init__(self, bssid, ssid, rssi, freq="None"):
         self.bssid = bssid
