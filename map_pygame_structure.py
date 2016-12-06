@@ -58,9 +58,12 @@ class MapPygameMode(PygameMode):
                 1, color)
         self.mainSurf.surf.blit(label, pos)
 
+        return dfont.size(text)
+
     def drawHelpOverlay(self, mlString):
         surfSize = self.mainSurf.surf.get_size()
-        
+        mlString = mlString.strip()
+
         border = 80
         pygame.draw.rect(self.mainSurf.surf, (255,255,255),
                 (border,border,surfSize[0]-border*2,surfSize[1]-border*2))
@@ -68,8 +71,24 @@ class MapPygameMode(PygameMode):
                 (border,border,surfSize[0]-border*2,surfSize[1]-border*2),
                 1)
 
-        self.drawTextAt("HELP", (border+10,border+10),
+        posX = border + 10
+
+        sizeHelp = self.drawTextAt("HELP", (posX,border+10),
                 color=(255,0,0), size=35, bold=True)
+
+        if len(mlString) < 1: return
+
+        startY = border + sizeHelp[1] + 30
+        posX += 30
+        margin = 7
+        lines = mlString.splitlines()
+        sizeLine = self.drawTextAt(lines[0], (posX,startY))
+        for i in range(1,len(lines)):
+            line = lines[i]
+            lineY = startY + i*(sizeLine[1] + margin)
+            
+            self.drawTextAt(line, (posX, lineY))
+            
 
     def drawFooterHelp(self):
         surfSize = self.mainSurf.surf.get_size()
