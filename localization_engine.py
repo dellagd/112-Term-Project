@@ -52,7 +52,7 @@ class LocalizationEngine(threading.Thread):
                     
     def scanResult(self, result):
         if self.enabled:
-            print("Hit!")
+            print("Sample Received")
             posResult = self.statmodel.findLocation(result)
             if posResult != None:
                 self.results.append(literal_eval(self.statmodel.findLocation(result)))
@@ -81,7 +81,7 @@ class LocalizationEngine(threading.Thread):
 
             if z > zRange[0] and z <= zRange[1]:
                 return zPos
-        print("Out of range!")
+        print("Out of range floor position (this should not be possible)")
 
 
     def beginLocalization(self, samples, callback):

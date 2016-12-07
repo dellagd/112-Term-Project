@@ -11,6 +11,7 @@ class MainPygame(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         pygame.init()
+        pygame.display.set_caption("MapCMU")
         self.lock = threading.RLock()
         self.alive = True
         self.modes = {}
@@ -28,8 +29,7 @@ class MainPygame(threading.Thread):
     def run(self):
         self.lock.acquire()
         try:
-            self.screen = pygame.display.set_mode(self.currentMode.screenDims,
-                    pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.RESIZABLE)
+            self.screen = pygame.display.set_mode(self.currentMode.screenDims)
         finally:
             self.lock.release()
 
@@ -125,6 +125,8 @@ class PygameMode():
                 self.mousePressed(event)
             if event.type == pygame.KEYDOWN:
                 self.keyPressed(event)
+            if event.type == pygame.QUIT:
+                quit()
 
     def addSurface(self, surface):
         self.surfaces.append(surface)

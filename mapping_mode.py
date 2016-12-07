@@ -279,6 +279,9 @@ class MappingMode(MapPygameMode):
             self.mainSurf.surf.blit(label, (0, 55))
 
 
+        if self.showHelp:
+            self.drawHelpOverlay(Constants.helpAPMap)
+
         super().drawView(screen)
 
 #######################################
@@ -311,6 +314,8 @@ class MappingMode(MapPygameMode):
             self.downAFloor()
             self.regenerateMapPoints()
             self.locPoint.floorChange(self.zPos)
+        elif event.key == pygame.K_h:
+            self.showHelp = not self.showHelp
         elif event.key == pygame.K_r:
             self.resultTick = 0
             self.recording = not self.recording

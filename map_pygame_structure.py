@@ -51,7 +51,7 @@ class MapPygameMode(PygameMode):
         return (coords[0] + self.arrowOffset[0] - surf.get_size()[0]//2,
                 coords[1] + self.arrowOffset[1] - surf.get_size()[1]//2) 
 
-    def drawTextAt(self, text, pos, size=18, color=(10,10,10), bold=False):
+    def drawTextAt(self, text, pos, size=18, color=Constants.steel, bold=False):
         dfont = pygame.font.SysFont("arial", size, bold=bold)
         label = dfont.render(
                 text,
@@ -65,7 +65,7 @@ class MapPygameMode(PygameMode):
         mlString = mlString.strip()
 
         border = 80
-        pygame.draw.rect(self.mainSurf.surf, (255,255,255),
+        pygame.draw.rect(self.mainSurf.surf, Constants.backdrop,
                 (border,border,surfSize[0]-border*2,surfSize[1]-border*2))
         pygame.draw.rect(self.mainSurf.surf, (0,0,0),
                 (border,border,surfSize[0]-border*2,surfSize[1]-border*2),
@@ -94,7 +94,7 @@ class MapPygameMode(PygameMode):
         surfSize = self.mainSurf.surf.get_size()
         boxH = 30
 
-        pygame.draw.rect(self.mainSurf.surf, (255,255,255),
+        pygame.draw.rect(self.mainSurf.surf, Constants.backGray,
                 (0, surfSize[1] - boxH, surfSize[0], boxH))
         pygame.draw.rect(self.mainSurf.surf, (0,0,0),
                 (0, surfSize[1] - boxH, surfSize[0], boxH),
@@ -118,16 +118,16 @@ class MapPygameMode(PygameMode):
                  self.map2Rect.w, self.map2Rect.h))
 
     def drawCornerMsg(self):
-        boxSize = (0,0,140,30)
-        txtPos = (5,2)
-        pygame.draw.rect(self.mainSurf.surf, (255,255,255),
+        boxSize = (0,0,100,35)
+        txtPos = (10,2)
+        pygame.draw.rect(self.mainSurf.surf, Constants.backdrop,
                 boxSize)
         pygame.draw.rect(self.mainSurf.surf, (0,0,0),
                 boxSize,1)
 
-        dfont = pygame.font.SysFont("monospace", 25)
+        dfont = pygame.font.SysFont("arial", 25)
         label = dfont.render(
-                "Floor: %d" % self.selFloor,
+                "Floor %d" % self.selFloor,
                 1, (10,10,10))
         self.mainSurf.surf.blit(label, txtPos)
 

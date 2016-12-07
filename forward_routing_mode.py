@@ -7,14 +7,15 @@ import math
 import localization_engine
 
 class ForwardRoutingMode(MapPygameMode):
-    def __init__(self, call, args=("Parking - 1", "Rashid", (2300,3200))):
+    def __init__(self, call, args=("Parking - 1", "Rashid", (2300,3200,2))):
         MapPygameMode.__init__(self, bkcolor=(255,255,255), screenDims=(1000,800),
                 changeModeFn=call)
         self.router = routing_engine.RoutingEngine()
 
         self.plannedRoute = []
 
-        self.arrowOffset = list(args[2])
+        self.arrowOffset = list((args[2][0], args[2][1]))
+        self.newFloor(args[2][2])
         self.getRoute(args)
 
     def getRoute(self, args):
@@ -27,7 +28,7 @@ class ForwardRoutingMode(MapPygameMode):
 
         self.plannedRoute = list(map(lambda x: x.info,
                 self.router.findRoute(nodeA,nodeB)))
-        print("\nRoute: %r" %self.plannedRoute)
+        #print("\nRoute: %r" %self.plannedRoute)
 
     def drawSegments(self):
         for i in range(0, len(self.plannedRoute)-1):
@@ -99,6 +100,9 @@ class ForwardRoutingMode(MapPygameMode):
         self.drawCornerMsg()
         self.drawFooterHelp()
 
+        if self.showHelp:
+            self.drawHelpOverlay(Constants.helpForwardRouting)
+
         #if self.textBox.enabled:
         #    self.textBox.drawBox(self.mainSurf.surf)
     
@@ -127,5 +131,7 @@ class ForwardRoutingMode(MapPygameMode):
             self.upAFloor()
         elif event.key == pygame.K_PAGEDOWN:
             self.downAFloor()
+        elif event.key == pygame.K_h:
+            self.showHelp = not self.showHelp
         elif event.key == pygame.K_ESCAPE:
             self.changeModeFn()

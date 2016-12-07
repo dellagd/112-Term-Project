@@ -6,7 +6,7 @@ import time
 
 class SelectionMode(PygameMode):
     def __init__(self, call):
-        self.bk = (60,98,223)
+        self.bk = Constants.backdrop
         PygameMode.__init__(self,screenDims=(1000,800),bkcolor=self.bk,
                 changeModeFn=call)
         self.mainSurf = SurfacePlus()
@@ -20,19 +20,19 @@ class SelectionMode(PygameMode):
         size = (350,100)
 
         pos = (self.surfDims[0]/2, 350)
-        buttonNav = SelectionMode.Button(pos,size,self.bk,"Navigate Mode",
+        buttonNav = SelectionMode.Button(pos,size,"Navigate Mode",
                 self.changeModeFn)
         buttonNav.setModeResponse("Navigate")
         self.mainSurf.objects.append(buttonNav)
         
         pos = (self.surfDims[0]/2, 500)
-        buttonRoutes = SelectionMode.Button(pos,size,self.bk,"Map Routes Mode",
+        buttonRoutes = SelectionMode.Button(pos,size,"Map Routes Mode",
                 self.changeModeFn)
         buttonRoutes.setModeResponse("Route Planning")
         self.mainSurf.objects.append(buttonRoutes)
 
         pos = (self.surfDims[0]/2, 650)
-        buttonMapAP = SelectionMode.Button(pos,size,self.bk,"Map APs Mode",
+        buttonMapAP = SelectionMode.Button(pos,size,"Map APs Mode",
                 self.changeModeFn)
         buttonMapAP.setModeResponse("Mapping")
         self.mainSurf.objects.append(buttonMapAP)
@@ -40,12 +40,12 @@ class SelectionMode(PygameMode):
     ###############################################
 
     class Button(PygameObject):
-        def __init__(self, position, size, color, text, call):
+        def __init__(self, position, size, text, call, color=Constants.marigold):
             PygameObject.__init__(self, pos=position)
             self.text = text
             self.size = size
             self.call = call
-            self.buttonColor = (0,255,0)
+            self.buttonColor = Constants.denim
             self.txtColor = color
 
         def setModeResponse(self, mode):
@@ -90,6 +90,8 @@ class SelectionMode(PygameMode):
     ###############################################
 
     def drawWelcome(self):
+        txtColor = Constants.denim
+        
         msg = "Welcome!"
         offset = 40
         margin = 15
@@ -98,7 +100,7 @@ class SelectionMode(PygameMode):
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
-                1, (240,240,0))
+                1, txtColor)
         textPos = (self.surfDims[0]/2 - sizeText[0]/2,
                     sizeText[1]/2 + offset)
         self.mainSurf.surf.blit(label,textPos)
@@ -110,7 +112,7 @@ class SelectionMode(PygameMode):
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
-                1, (240,240,0))
+                1, txtColor)
         self.mainSurf.surf.blit(label,
                 (self.surfDims[0]/2 - sizeText[0]/2, yPos))
 
@@ -131,7 +133,7 @@ class SelectionMode(PygameMode):
 
 class NavigateMode(PygameMode):
     def __init__(self, call):
-        self.bk = (60,98,223)
+        self.bk = Constants.backdrop
         PygameMode.__init__(self,screenDims=(1000,800),bkcolor=self.bk,
                 changeModeFn=call)
         self.mainSurf = SurfacePlus()
@@ -161,7 +163,8 @@ class NavigateMode(PygameMode):
 
         self.waiting = False
 
-        viewPos = (fromPos[0], fromPos[1])
+        floor = (int(fromPos[2]/Constants.floorHeight) + 1)
+        viewPos = (fromPos[0], fromPos[1], floor)
         self.changeModeFn("Routing", args=(locA,locB,viewPos))
         
 
@@ -202,7 +205,7 @@ class NavigateMode(PygameMode):
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
-                1, (240,240,0))
+                1, Constants.titleText)
         textPos = (self.surfDims[0]/2 - sizeText[0]/2,
                     sizeText[1]/2 + offset)
         self.mainSurf.surf.blit(label,textPos)
@@ -214,14 +217,14 @@ class NavigateMode(PygameMode):
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
-                1, (240,240,0))
+                1, Constants.titleText)
         self.mainSurf.surf.blit(label,
             (self.surfDims[0]/2 - sizeText[0]/2, yPos))
 
     def drawWaiting(self):
         msg = "Localizing"
         curTime = time.time() - self.startWaiting
-        dots = (int(curTime)//2)%3
+        dots = (int(curTime))%3
         msg += '.'*(dots+1)
 
         offset = 100
@@ -229,7 +232,7 @@ class NavigateMode(PygameMode):
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
-                1, (240,240,0))
+                1, Constants.titleText)
         textPos = (self.surfDims[0]/2 - sizeText[0]/2,
                     self.surfDims[1] - sizeText[1] - offset)
         self.mainSurf.surf.blit(label,textPos)

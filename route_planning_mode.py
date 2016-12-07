@@ -197,7 +197,7 @@ class RoutePlanningMode(MapPygameMode):
         self.drawFooterHelp()
 
         if self.showHelp:
-            self.drawHelpOverlay("\nTest\nThis\n")
+            self.drawHelpOverlay(Constants.helpRoutePlanning)
 
         if self.textBox.enabled:
             self.textBox.drawBox(self.mainSurf.surf)
