@@ -118,7 +118,7 @@ class MapPygameMode(PygameMode):
                  self.map2Rect.w, self.map2Rect.h))
 
     def drawCornerMsg(self):
-        boxSize = (0,0,100,35)
+        boxSize = (-1,-1,100,35)
         txtPos = (10,2)
         pygame.draw.rect(self.mainSurf.surf, Constants.backdrop,
                 boxSize)

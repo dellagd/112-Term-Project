@@ -29,7 +29,7 @@ class Constants(object):
     titleText = steel
 
     # Help #
-    footerHelp = "ESC: Return to Previous Mode | H: Toggle Help | Ctrl-C: Exit"
+    footerHelp = "ESC: Back to Previous Screen | H: Toggle Help | Ctrl-C: Exit"
     helpForwardRouting = '''ARROWS: Pan around map (+ SHIFT for fine control)
 PAGE UP: Move up a floor
 PAGE DOWN: Move down a floor
@@ -56,7 +56,7 @@ be a terminus on the linked node map.
     helpAPMap = '''ARROWS: Pan around map (+ SHIFT for fine control)
 PAGE UP: Move up a floor
 PAGE DOWN: Move down a floor
-P: Toggle localization using recorded data
+P: Toggle localization using recorded data (location shown as triangle)
 
 Move the red cursor by using the ARROWS and PAGE UP/DOWN
 to your physical location on the map. Then press R to

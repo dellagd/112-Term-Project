@@ -214,7 +214,7 @@ class MappingMode(MapPygameMode):
                 self.pos = (dims[0] - self.width, 0)
                 margin, size = 2, 15
                 height = max(len(stamps) * (2*margin+size),15)
-                pygame.draw.rect(surface.surf, (220,220,255), self.pos + (self.width, height), 0)
+                pygame.draw.rect(surface.surf, Constants.backdrop, self.pos + (self.width, height), 0)
                 pygame.draw.rect(surface.surf, (0,0,0), self.pos + (self.width, height), 1)
 
                 dfont = pygame.font.SysFont("monospace", size)    
@@ -269,14 +269,14 @@ class MappingMode(MapPygameMode):
         label = dfont.render(
                 "Position (x,y): (%d,%d)" % (self.arrowOffset[0], self.arrowOffset[1]),
                 1, (10,10,10))
-        self.mainSurf.surf.blit(label, (0, 35))
+        self.mainSurf.surf.blit(label, (5, 40))
 
         if (self.recording or self.finding):
             label = dfont.render(
                     "RECORDING (%d)" % self.resultTick if self.recording \
                         else "FINDING (%d): %s" % (self.resultTick,self.currentPos),
                     1, (255,0,0))
-            self.mainSurf.surf.blit(label, (0, 55))
+            self.mainSurf.surf.blit(label, (5, 60))
 
 
         if self.showHelp:
