@@ -1,4 +1,13 @@
+#############################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+# Inspiration from inputbox.py example module online with heavy modification
+#
+# This module houses user input classes, of which there is currently only
+# a pop-up text box
+#############################################################################
+
 import pygame
+from mapcmu_data import *
 
 class TextInputBox(object):
     def __init__(self, pos=(0,0), color=(180,255,180)):
@@ -44,7 +53,7 @@ class TextInputBox(object):
         # Center text in box
         label = dfont.render(
                 "%s: %s" % (self.prompt,self.text),
-                1, (10,10,10))
+                1, Constants.steel)
         surface.blit(label, (xText,yText))
 
         fSize = 20
@@ -55,7 +64,7 @@ class TextInputBox(object):
         yText = yMid - self.bSize[1]//2 - self.bOffset 
         label = dfont.render(
                 instr,
-                1, (10,10,10))
+                1, Constants.steel)
         surface.blit(label, (xText,yText))
        
     def doCallback(self):
@@ -71,10 +80,10 @@ class TextInputBox(object):
             self.text = self.text[:-1]
         elif event.key == pygame.K_RETURN:
             self.doCallback()
-        elif event.key < 127: # An alpha key
+        elif event.key < 127: # This is an alphabet key, put it in the box
             char = event.key
             if shift: char -= 32
-            self.text += chr(char)
+            self.text += chr(char) # Capital letters
         
 
 

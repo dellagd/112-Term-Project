@@ -1,3 +1,12 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# The localization engine wraps both the APScanner and StatModel into
+# a simple interface that more easily permits the implementation
+# of WiFi localization. This class is used by the Navigation Mode in
+# order to find the user's initial location
+##########################################################################
+
 import threading
 import time
 from mapcmu_data import *
@@ -17,8 +26,9 @@ class LocalizationEngine(threading.Thread):
 
         self.results = []
 
+        # Set up the scanner
         self.scanner = ScannerUtils.APScanner(trigFunc=self.scanResult)
-        self.scanner.daemon = True
+        self.scanner.daemon = True # Quit when the parent thread quits
         self.scanner.start()
 
         self.statmodel = StatModelForAPs.ProbabilisticMap(
@@ -31,12 +41,15 @@ class LocalizationEngine(threading.Thread):
 
         self.kill = False
 
+        self.selBuilding = "GHC"
+
     def run(self):
         self.__mainloop()
 
     def __mainloop(self):
         while True:
             if self.kill:
+                # If I'm dead, kill the scanner too
                 self.scanner.kill = True
                 return
 
@@ -58,6 +71,7 @@ class LocalizationEngine(threading.Thread):
                 self.results.append(literal_eval(self.statmodel.findLocation(result)))
 
     def reduceToPosition(self):
+        # Average out possible positions down to one
         count = len(self.results)
         self.currentPos = reduce(lambda x,y: (
                 x[0]+y[0], x[1]+y[1], x[2]+y[2]),
@@ -71,8 +85,9 @@ class LocalizationEngine(threading.Thread):
 
 
     def coerceZPos(self, z):
-        maxFloor = Constants.buildings["GHC"].maxFloor
-        minFloor = Constants.buildings["GHC"].minFloor
+        # Snap z position to a valid floor
+        maxFloor = Constants.buildings[self.selBuilding].maxFloor
+        minFloor = Constants.buildings[self.selBuilding].minFloor
 
         for floor in range(minFloor, maxFloor+1):
             zPos = (floor-1) * Constants.floorHeight

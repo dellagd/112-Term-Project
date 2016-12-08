@@ -1,3 +1,12 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module is the first layer of abstraction I have implemented on top
+# of PyGame. It creates a 'program' structure where by different 'modes'
+# can be called upon, taking control of the window and inputs. MapCMU
+# utilizes this system for its different screens.
+##########################################################################
+
 import threading
 import os, sys, time
 import pygame
@@ -27,6 +36,8 @@ class MainPygame(threading.Thread):
         self.alive = False
     
     def run(self):
+        # Note the locked setup for this class. As it is being accessed by
+        # multiple threads, we have to make sure there are no access collisions
         self.lock.acquire()
         try:
             self.screen = pygame.display.set_mode(self.currentMode.screenDims)
@@ -68,8 +79,7 @@ class MainPygame(threading.Thread):
         try:
             self.currentMode = self.modes[name]
             self.dimQueue = self.currentMode.screenDims
-            self.screen = pygame.display.set_mode(self.currentMode.screenDims,
-                pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.RESIZABLE)
+            self.screen = pygame.display.set_mode(self.currentMode.screenDims)
         finally:
             self.lock.release()
 
@@ -110,7 +120,8 @@ class PygameMode():
         pass
 
     def keyPressed(self, event):
-        # Override this! (and call super)
+        # Override this! (and call super because you should be able to exit
+        # from any mode)
         ctrl = pygame.key.get_mods() & pygame.KMOD_CTRL
         if (event.key == pygame.K_c and ctrl):
             quit()
@@ -125,7 +136,7 @@ class PygameMode():
                 self.mousePressed(event)
             if event.type == pygame.KEYDOWN:
                 self.keyPressed(event)
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT: # Red X window button
                 quit()
 
     def addSurface(self, surface):
@@ -138,6 +149,8 @@ class PygameMode():
         return self.surfaces[i]
 
 class PygameObject(object):
+    # Objects that can be added to a SurfacePlus and thus be drawn and
+    # take user input
     def __init__(self, pos=(0,0), mToV=lambda *x:x[0], vToM=lambda *x:x[0]):
         self.mToV = mToV
         self.vToM = vToM
@@ -160,6 +173,8 @@ class PygameObject(object):
             obj.mousePressed(surface, x, y)
 
 class SurfacePlus(object):
+    # Container for surface things, such as an actual surface and
+    # PygameObjects
     def __init__(self):
         self.surf = None
         self.name = ""
@@ -175,6 +190,7 @@ class SurfacePlus(object):
                     event.pos[1])
 
 class BootingMode(PygameMode):
+    # Startup splashscreen mode, just draw an image
     def __init__(self, screenDims=(1000,800), bkcolor=(200,200,200)):
         PygameMode.__init__(self,screenDims=screenDims,bkcolor=bkcolor)
         self.mainSurf = SurfacePlus()
@@ -185,7 +201,6 @@ class BootingMode(PygameMode):
         self.map2Rect = self.map2image.get_rect()
 
     def drawView(self, screen):
-        #self.mainSurf.surf.fill((0,255,255))
         self.mainSurf.surf.blit(self.map2image, 
                  pygame.Rect(0, 0,
                  self.map2Rect.w, self.map2Rect.h))

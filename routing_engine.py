@@ -1,3 +1,11 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module performs all the routing functions that MapCMU relies on 
+# for navigation, which includes the actual pathfinding as well as 
+# managing the data for the routes
+##########################################################################
+
 import mongodb_databases
 from mapcmu_data import *
 
@@ -8,6 +16,7 @@ class RoutingEngine(object):
         #self.segTable.nukeTable()
 
     def testTable(self):
+        # Set up some fake data in the database so the display can be tested
         self.segTable.addSegment([10,10,0,"GHC"], [10,100,0,"GHC"])
         self.segTable.addSegment([10,100,0,"GHC"], [100,100,0,"GHC"])
         self.segTable.addSegment([10,10,0,"GHC"], [100,10,0,"GHC"])
@@ -49,6 +58,7 @@ class RoutingEngine(object):
         return locsLists
 
     def getAllConnections(self, node):
+        # Find all the connected nodes an input node has
         node = list(node)
         
         q = { '$or' : [{"LOC_A" : node}, {"LOC_B" : node}]}
@@ -64,6 +74,7 @@ class RoutingEngine(object):
         return neighbors
 
     class AStarNode(object):
+        # Node object for the A* algorithm
         def __init__(self, nodeInfo, parent):
             self.info = nodeInfo
             self.parent = parent
@@ -106,6 +117,8 @@ class RoutingEngine(object):
                     self.calcGCost(testNode)
     
     def findRoute(self, origin, dst):
+        # Do the A* algorithm
+        # Based upon tutorials online (not copy/pasted)
         nodes = self.getAllNodes()
        
         if origin not in nodes or dst not in nodes:
@@ -144,6 +157,10 @@ class RoutingEngine(object):
 
 
     def retracePath(self, node):
+        # Once A* finds the terminus, retrace back through the node's parents
+        # to find the start. This recursive call returns this in the
+        # correct, start-to-end format.
+        
         if node == None:
             return []
 

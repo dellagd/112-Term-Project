@@ -1,3 +1,11 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module creates the UI for the Forward Routing Mode, which is the 
+# most simple 'map' mode, in that it just displays the route generated
+# from the Navigation Mode.
+##########################################################################
+
 from pygame_structure import *
 from map_pygame_structure import *
 import routing_engine
@@ -43,6 +51,7 @@ class ForwardRoutingMode(MapPygameMode):
                         p1m, p2m, 6)
 
     def drawPoints(self):
+        # Draw all the points from the planned route
         radius = 10
         color = (0,255,0)
         for i in range(0,len(self.plannedRoute)):
@@ -54,6 +63,7 @@ class ForwardRoutingMode(MapPygameMode):
            
 
             if pointA[2] == self.zPos:
+                # Checks to see if this should be a text point
                 if i == 0:
                     self.drawTextPoint(coords, "Start")
                 elif pointB == None:
@@ -66,6 +76,7 @@ class ForwardRoutingMode(MapPygameMode):
                     pygame.draw.circle(self.mainSurf.surf, color, coords, radius)
 
     def drawTextPoint(self, coords, text):
+        # Draws fitted boxes around input text at a location
         radius = 25
         boxColor = (0,255,0)
         boxBuf = 5

@@ -1,3 +1,10 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module creates the UI for creating AP data maps and testing out
+# localization against said maps.
+##########################################################################
+
 from map_pygame_structure import *
 from functools import reduce
 import mongodb_databases
@@ -21,6 +28,7 @@ class MappingMode(MapPygameMode):
         self.possiblePos = []
         self.currentPos = None
 
+        # Set up the AP data map tables
         self.mapByLoc = {}
         self.db = mongodb_databases.MDBDatabase(Constants.database)
         self.mapTable = mongodb_databases.MapTable(self.db.database)
@@ -52,6 +60,7 @@ class MappingMode(MapPygameMode):
         self.regenerateMapPoints()
 
     def scanResult(self, result):
+        # Results are stores with a repr of a tuple location
         if self.recording:
             self.resultTick += 1
             for apRow in result:
@@ -69,6 +78,7 @@ class MappingMode(MapPygameMode):
             if posResult != None:
                 self.possiblePos.append(literal_eval(self.statmodel.findLocation(result)))
 
+            # Do results reduction for testing out localization
             count = len(self.possiblePos)
             self.currentPos = reduce(lambda x,y: (
                     x[0]+y[0], x[1]+y[1], x[2]+y[2]),
@@ -96,7 +106,8 @@ class MappingMode(MapPygameMode):
     def regenerateMapPoints(self):
         self.mapPoints.objects = []
         possibleLocs = self.mapTable.collection.distinct("Location")
-       
+        # Get all distinct locations entered in
+
         for loc in possibleLocs:
             locT = literal_eval(loc)
             if locT[2] != self.zPos: continue
@@ -106,6 +117,7 @@ class MappingMode(MapPygameMode):
 #######################################
 
     class MapPoint(PygameObject):
+        # Green (or blue-selected) point for showing where data has been taken
         def initData(self):
             self.radius = 4
             self.color = (0,255,0)
@@ -131,6 +143,7 @@ class MappingMode(MapPygameMode):
             return False
 
     class FoundPoint(PygameObject):
+        # Purple triangle that showns the user's current location during test
         def initData(self):
             self.radius = 6 # Size for triangle 
             self.color = (255,0,255)
@@ -167,6 +180,7 @@ class MappingMode(MapPygameMode):
 
 
     class MapPointHandler(PygameObject):
+        # Hold all the map points and handle single-selection of them
         def setTable(self, table):
             self.table = table
 
@@ -199,6 +213,8 @@ class MappingMode(MapPygameMode):
             self.selectedPoint = found
 
     class MapPopup(PygameObject):
+        # Box that displays on the upper right with the dates when
+        # data was taken for that point (shows index numbers for deletion)
         def setTable(self, table):
             self.table = table
 
@@ -228,23 +244,6 @@ class MappingMode(MapPygameMode):
                             (self.pos[0]+margin,
                             self.pos[1]+margin + i*(2*margin+size)))
 
-    def modelToView(self, coords, surf):
-        return (coords[0] - self.arrowOffset[0] + surf.get_size()[0]//2,
-                coords[1] - self.arrowOffset[1] + surf.get_size()[1]//2)
-
-    def viewToModel(self, coords, surf):
-        return (coords[0] + self.arrowOffset[0] - surf.get_size()[0]//2,
-                coords[1] + self.arrowOffset[1] - surf.get_size()[1]//2) 
-
-    def drawMap(self):
-        self.mainSurf.surf.fill((200,200,200))
-    
-        coords = self.modelToView(self.map2Rect, self.mainSurf.surf)
-
-        self.mainSurf.surf.blit(self.map2image, 
-                 pygame.Rect(coords[0], coords[1],
-                 self.map2Rect.w, self.map2Rect.h))
-       
     def drawCursor(self):
         mid = (self.screenDims[0]//2, self.screenDims[1]//2)
         cursorSize = min(self.screenDims[0]//15, self.screenDims[1]//15)

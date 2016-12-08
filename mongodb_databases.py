@@ -1,3 +1,11 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module wraps MongoDB into a nice interface for both the MapTable
+# and SegmentTable, which hold the data for the AP data map and the
+# routable paths map, respectively.
+##########################################################################
+
 from pymongo import MongoClient
 import time
 
@@ -7,6 +15,7 @@ class MDBDatabase(object):
         self.database = self.client[name]
 
 class MDBTable(object):
+    # Superclass for a table object
     def __init__(self, name, db):
         self.collection = db[name]
 
@@ -24,6 +33,7 @@ class MDBTable(object):
         return self.collection.find(row)[0]["_id"]
 
 class MapTable(MDBTable):
+    # Table for storing data for the AP map
     def __init__(self, db):
         super().__init__("APMap", db)
 
@@ -51,6 +61,7 @@ class MapTable(MDBTable):
         return res
 
 class SegmentTable(MDBTable):
+    # Table for storing data for routable paths
     def __init__(self, db):
         super().__init__("NodeMap", db)
 

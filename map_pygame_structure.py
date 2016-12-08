@@ -1,3 +1,13 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module is the second layer of abstraction that a few MapCMU modes
+# use. It implements common features that should be present in all three
+# 'map' modes, such as displaying a map image, navigating with arrows,
+# etc. Using another superclass like this keeps appearence and function
+# consistant across these modes.
+##########################################################################
+
 from pygame_structure import *
 from mapcmu_data import *
 
@@ -27,6 +37,7 @@ class MapPygameMode(PygameMode):
         self.selFloor = 2
         self.selBuilding = "GHC"
 
+    # Change floor functions
     def upAFloor(self):
         if self.selFloor < Constants.buildings[self.selBuilding].maxFloor:
             self.newFloor(self.selFloor+1)
@@ -106,7 +117,7 @@ class MapPygameMode(PygameMode):
         boxY = msgSize[1]/2 + boxH/2 
         label = dfont.render(
                 msg,
-                1, (10,10,10))
+                1, Constants.steel)
         self.mainSurf.surf.blit(label, 
                 (surfSize[0]/2 - msgSize[0]/2, surfSize[1]-boxY))
 
@@ -124,10 +135,11 @@ class MapPygameMode(PygameMode):
                 boxSize)
         pygame.draw.rect(self.mainSurf.surf, (0,0,0),
                 boxSize,1)
+        fSize = 25
 
-        dfont = pygame.font.SysFont("arial", 25)
+        dfont = pygame.font.SysFont("arial", fSize)
         label = dfont.render(
                 "Floor %d" % self.selFloor,
-                1, (10,10,10))
+                1, Constants.steel)
         self.mainSurf.surf.blit(label, txtPos)
 

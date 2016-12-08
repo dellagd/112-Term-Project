@@ -1,3 +1,16 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module contains two modes: 
+#
+# Selection Mode, which is the first mode the user enters and presents 
+# them with the choice of the three operational modes
+#
+# Navigation Mode, which is the simple UI for entering in a desired
+# destination, to which a route from the current location will be
+# generated.
+##########################################################################
+
 from pygame_structure import *
 import user_input
 from mapcmu_data import *
@@ -40,6 +53,7 @@ class SelectionMode(PygameMode):
     ###############################################
 
     class Button(PygameObject):
+        # Button object that detects clicks as well as draws the button
         def __init__(self, position, size, text, call, color=Constants.marigold):
             PygameObject.__init__(self, pos=position)
             self.text = text
@@ -81,6 +95,7 @@ class SelectionMode(PygameMode):
             leftBound = self.pos[0] - self.size[0]/2
             rightBound = self.pos[0] + self.size[0]/2
 
+            # Check click is on box
             if (xr < rightBound and xr > leftBound and
                 yr < bottomBound and yr > topBound):
                 #print("%s clicked!" % self.text)
@@ -95,8 +110,9 @@ class SelectionMode(PygameMode):
         msg = "Welcome!"
         offset = 40
         margin = 15
+        welcomeSize = 80
 
-        dfont = pygame.font.SysFont("arial", 80)
+        dfont = pygame.font.SysFont("arial", welcomeSize)
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
@@ -107,8 +123,9 @@ class SelectionMode(PygameMode):
        
         msg = "Click an operation mode below to enter"
         yPos = textPos[1] + sizeText[1] + margin
+        subSize = 28
 
-        dfont = pygame.font.SysFont("arial", 28)
+        dfont = pygame.font.SysFont("arial", subSize)
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
@@ -119,12 +136,12 @@ class SelectionMode(PygameMode):
     def drawView(self, screen):
         self.mainSurf.surf.fill(self.bk)
         self.drawWelcome()
-        self.mainSurf.drawObjects()
+        self.mainSurf.drawObjects() # This is what will draw the buttons
 
         super().drawView(screen)
 
     def mousePressed(self, event):
-        self.mainSurf.mouseObjects(event, (0,0))
+        self.mainSurf.mouseObjects(event, (0,0)) # Pass mouse event down
 
     def keyPressed(self, event):
         super().keyPressed(event)
@@ -153,7 +170,13 @@ class NavigateMode(PygameMode):
     ###############################################
 
     def requestRouteTo(self):
+        # Check if valid location
+        dests = self.localize.router.segTable.collection.distinct("NOTE")
+        if (self.entryText not in dests):
+            return
+
         self.localize.beginLocalization(3, self.route)
+        # Now wait for localization engine to complete and do callback
         self.waiting = True
         self.startWaiting = time.time()
 
@@ -200,8 +223,9 @@ class NavigateMode(PygameMode):
         msg = "Navigate"
         offset = 40
         margin = 15
+        navSize = 80
 
-        dfont = pygame.font.SysFont("arial", 80)
+        dfont = pygame.font.SysFont("arial", navSize)
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
@@ -212,8 +236,9 @@ class NavigateMode(PygameMode):
        
         msg = "Type your intended destination below"
         yPos = textPos[1] + sizeText[1] + margin
+        subSize = 28
 
-        dfont = pygame.font.SysFont("arial", 28)
+        dfont = pygame.font.SysFont("arial", subSize)
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
@@ -226,9 +251,10 @@ class NavigateMode(PygameMode):
         curTime = time.time() - self.startWaiting
         dots = (int(curTime))%3
         msg += '.'*(dots+1)
+        fSize = 50
 
         offset = 100
-        dfont = pygame.font.SysFont("arial", 50)
+        dfont = pygame.font.SysFont("arial", fSize)
         sizeText = dfont.size(msg)
         label = dfont.render(
                 msg,
@@ -259,7 +285,7 @@ class NavigateMode(PygameMode):
             self.entryText = self.entryText[:-1]
         elif event.key == pygame.K_RETURN:
             self.requestRouteTo()
-        elif event.key < 127: # An alpha key
+        elif event.key < 127: # Put this char into the text box
             char = event.key
             if shift: char -= 32
             self.entryText += chr(char)

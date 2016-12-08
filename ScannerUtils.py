@@ -1,3 +1,11 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module interacts with the WiFi adapter at the lowest level,
+# running the actual scan on the adapter and parsing its output into
+# a usable format
+##########################################################################
+
 from subprocess import check_output, call
 import os
 import copy
@@ -22,6 +30,8 @@ class APScanner(threading.Thread):
     ############################
 
     def __populateMap(self):
+        # Populate the map given some data that computing servies provided
+        # (no longer used, not accurate enough)
         import csv
         with open('compsvcmap.csv', 'rt') as f:
             reader = csv.reader(f)
@@ -32,6 +42,7 @@ class APScanner(threading.Thread):
                 self.mapAPs.append(MapAP(line[2], line[0]))
     
     def __getLocFromBSSID(self, bssid):
+        # Return the location from the seen BSSID
         for i in range(len(self.mapAPs)):
             ap = self.mapAPs[i]
             if ap.bssid.lower() == bssid.lower():
@@ -60,7 +71,9 @@ class APScanner(threading.Thread):
 
     def __sortAPList(self):
         self.foundAPs.sort(reverse=True, key=lambda ap: ap.rssi)
+        # Sort by RSSI
         self.foundAPs.sort(key=lambda ap: ap.age)
+        # Then by age
 
     def __repr__(self):
         print ("AGE\tSSID\t\tBSSID\t\t\tLOCATION\t\tRSSI\tFREQ")
@@ -71,6 +84,7 @@ class APScanner(threading.Thread):
                     "\t\t" + str(ap.rssi) + "\t" + ap.freq)
    
     def getResultsList(self):
+        # Output for testing the RSSI packets
         resl = []
         for ap in self.foundAPs:
             if ap.rssi < -60: continue
@@ -91,6 +105,8 @@ class APScanner(threading.Thread):
     def __mainloop(self):
         devnull = open(os.devnull, 'w')
         while not self.kill:
+            # This command actually gets the information out of the hardware
+            # Note: scan.awk is a gawk script I found online and then modified
             out = check_output(
                     "echo 'password' | sudo -kS iw dev wlan0 scan | gawk -f scan.awk",
                     shell=True, stderr=devnull)
@@ -133,6 +149,7 @@ class APScanner(threading.Thread):
             time.sleep(0.01)
 
 class FoundAP(object):
+    # Data class for organizing a found AP's information
     def __init__(self, bssid, ssid, rssi, freq="None"):
         self.bssid = bssid
         self.rssi = rssi

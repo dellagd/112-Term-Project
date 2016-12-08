@@ -1,3 +1,9 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# Constants class for common or large constants
+##########################################################################
+
 class Constants(object):
     class Building(object):
         def __init__(self, minh, maxh):
@@ -37,6 +43,7 @@ PAGE DOWN: Move down a floor
     helpRoutePlanning = '''ARROWS: Pan around map (+ SHIFT for fine control)
 PAGE UP: Move up a floor
 PAGE DOWN: Move down a floor
+U: Undo node placement
 
 Click map to begin placing route nodes. Nodes are indicated
 as blue dots, purple when existing nodes are selected.

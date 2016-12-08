@@ -1,3 +1,9 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This UI module presents the interface for planning routable paths
+##########################################################################
+
 from pygame_structure import *
 from map_pygame_structure import *
 import routing_engine
@@ -8,8 +14,10 @@ import math
 class RoutePlanningMode(MapPygameMode):
     def __init__(self, call):
         MapPygameMode.__init__(self, changeModeFn=call)
-        self.router = routing_engine.RoutingEngine()
         
+        # Get a routing engine to add data to the node map
+        self.router = routing_engine.RoutingEngine() 
+
         self.textBox = user_input.TextInputBox()
 
         self.initData()
@@ -57,7 +65,7 @@ class RoutePlanningMode(MapPygameMode):
                 self.lastPoint = point[2]
 
     def checkAndAddSegment(self, aLoc, bLoc):
-        print("This point: %r   Last point: %r" % (aLoc, bLoc))
+        #print("This point: %r   Last point: %r" % (aLoc, bLoc))
             
         if aLoc != None and bLoc != None:
             aLocDB = [aLoc[0],aLoc[1],self.zPos,self.selBuilding]
@@ -88,6 +96,7 @@ class RoutePlanningMode(MapPygameMode):
             ) # Returns entry id
     
     def textBoxCallback(self, text, rId):
+        # When the user hits enter, the text box calls this function
         print(text, rId)
         self.router.segTable.collection.update({"_id" : rId},
                 {"$set" : {"NOTE" : text}})
@@ -95,6 +104,7 @@ class RoutePlanningMode(MapPygameMode):
     ##################################################
     
     class RouteNode(PygameObject):
+        # Blue point that represents where segments meet or end
         def initData(self):
             self.radius = 5
             self.color = (0,0,255)
@@ -123,6 +133,7 @@ class RoutePlanningMode(MapPygameMode):
             return False
    
     class RouteNodeHandler(PygameObject):
+        # Container class for handling all the route nodes
         def setTable(self, table):
             self.table = table
 
@@ -141,6 +152,7 @@ class RoutePlanningMode(MapPygameMode):
                     self.objects.remove(node)
 
         def purgeNodes(self, dbNodes):
+            # Reset all nodes to those passed in
             self.objects = []
 
             for node in dbNodes:
@@ -170,6 +182,7 @@ class RoutePlanningMode(MapPygameMode):
             self.selectedPoint = found
 
     def refreshNodes(self):
+        # Do a purge off of the database
         self.routeNodes.purgeNodes(
                 self.router.getAllNodes(onFloor=self.selFloor))
 
@@ -251,13 +264,12 @@ class RoutePlanningMode(MapPygameMode):
         elif event.key == pygame.K_h:
             self.showHelp = not self.showHelp
         elif event.key == pygame.K_SPACE:
-            print("Space!")
             self.refreshNodes()
             self.routeNodes.clearSelection()
             self.lastPoint = None
         elif event.key == pygame.K_ESCAPE:
             self.changeModeFn()
-        elif event.key == pygame.K_a:
+        #elif event.key == pygame.K_a:
             # TESTING POPUP
-            self.textBox.doPopup("Room", self.textBoxCallback)
+            #self.textBox.doPopup("Room", self.textBoxCallback)
 

@@ -1,3 +1,11 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module is the highest level script that of MapCMU. It facilitates
+# the initialization of the software as well as the transition between
+# modes.
+##########################################################################
+
 import threading
 import os, sys, time
 import pygame
@@ -19,10 +27,10 @@ class MainProgram(threading.Thread):
         self.modeStack = []
 
         #self.myPygame.daemon=True
-        self.myPygame.start()
+        self.myPygame.start() # Start the PyGame wrapper thread
 
     def run(self):
-        self.__mainloop()
+        self.go()
 
     def upAMode(self):
         self.modeStack.pop() # Pop twice because mode will be re-added
@@ -31,6 +39,8 @@ class MainProgram(threading.Thread):
         self.changeMode(mode)
 
     def changeMode(self, mode=None, args=None):
+        # This function will be passed down to the modes so they can use it to
+        # call a mode change
         if mode == None:
             self.upAMode()
             return
@@ -61,7 +71,8 @@ class MainProgram(threading.Thread):
             self.modeStack.append(mode)
             self.myPygame.useMode(mode)
 
-    def __mainloop(self):
+    def go(self):
+        # Initialize modes
         call = self.changeMode
         modeMapping = MappingMode(call)
         modeRoutePlan = RoutePlanningMode(call)

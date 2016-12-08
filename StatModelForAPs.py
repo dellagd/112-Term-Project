@@ -1,3 +1,11 @@
+##########################################################################
+# Author: Griffin Della Grotte (gdellagr@andrew.cmu.edu)
+#
+# This module is responsible for the statistical model that performs
+# localization via APs. It takes in RSSI results and stores them or
+# localizes off of them
+##########################################################################
+
 import math
 from functools import reduce
 
@@ -14,6 +22,7 @@ class ProbabilisticMap(object):
         self.regenerateModel()
 
     def addResultRow(self, loc, bssid, rssi, timeStamp):
+        # Add sample to the AP map
         self.mapTable.addAP(loc, bssid, rssi, timeStamp)
 
     def regenerateModel(self):
@@ -22,7 +31,7 @@ class ProbabilisticMap(object):
         self.pdfsPerLocation = self.generateProbFuncs()
            
     def findLocation(self, report):
-        q = 4 # Get Strongest 4
+        q = 4 # Use the strongest 4 (for speed)
         if len(report) <= 2:
             print("Report from wifi adapter too small")
             return None
@@ -47,6 +56,9 @@ class ProbabilisticMap(object):
 
 
     def probOfResult(self, loc, topQ):
+        # Find how probable it is that an RSSI sample came from
+        # this location
+
         def findBSSIDMatch(bssid, a):
             for i in range(len(a)):
                 if bssid == a[i]["BSSID"]:
@@ -78,6 +90,7 @@ class ProbabilisticMap(object):
             
 
     def generateProbFuncs(self):
+        # Generate PDFs for each location and AP
         def getGaussianFunc(center, stdev):
             height = 1 / (2 * math.pi * stdev**2) # Lock integral = 1
             return lambda x: max(
