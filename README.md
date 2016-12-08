@@ -2,7 +2,7 @@
 
 Project Overview
 ----------------
-MapCMU is a software package that enables precise localization via Wireless Access Points and, using this technology, routing from the detected location to a new destination. The user operation of MapCMU takes place as follows: First, create a map of viable routes on a given floor using the Route Planning Mode (MapCMU comes pre-loaded with all floors of the Gates-Hillman Center). Then, walk all routable areas in which localization is desired, building a data-map of the wireless topology of the area, using the AP Mapping Mode. At his point, routing from the current location can be performed in the Routing Mode using the route map and AP map that were previously generated.
+MapCMU is a software package that enables precise localization via Wireless Access Points and, using this technology, routing from the detected location to a new destination. The user operation of MapCMU takes place as follows: First, create a map of viable routes on a given floor using the Route Planning Mode (MapCMU comes pre-loaded with all floors of the Gates-Hillman Center). Also, walk all routable areas in which localization is desired, building a data-map of the wireless topology of the area, using the AP Mapping Mode. After these steps, routing from the current location can be performed in the Routing Mode using the route map and AP map that were previously generated.
 
 Installation
 ------------
